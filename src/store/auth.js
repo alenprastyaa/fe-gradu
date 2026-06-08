@@ -23,8 +23,15 @@ export const useAuthStore = defineStore("graduationAuth", {
         localStorage.setItem("graduation_token", this.token);
         localStorage.setItem("graduation_admin", JSON.stringify(this.admin));
         localStorage.setItem("token", this.token);
-        localStorage.setItem("role", "admin");
-        localStorage.setItem("user", JSON.stringify({ full_name: this.admin.name, role: "admin" }));
+        localStorage.setItem("role", this.admin.role);
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            full_name: this.admin.name,
+            role: this.admin.role,
+            school_name: this.admin.school_name,
+          })
+        );
         return data.data;
       } catch (error) {
         this.error = apiMessage(error, "Login gagal");
@@ -38,6 +45,15 @@ export const useAuthStore = defineStore("graduationAuth", {
       const { data } = await authService.me();
       this.admin = data.data;
       localStorage.setItem("graduation_admin", JSON.stringify(this.admin));
+      localStorage.setItem("role", this.admin.role);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          full_name: this.admin.name,
+          role: this.admin.role,
+          school_name: this.admin.school_name,
+        })
+      );
       return this.admin;
     },
     async logout() {

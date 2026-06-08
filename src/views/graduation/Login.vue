@@ -1,9 +1,11 @@
 <template>
   <div class="min-h-screen bg-slate-100 font-lexend dark:bg-slate-950">
     <div class="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8">
-      <div class="grid w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card lg:grid-cols-2 dark:border-slate-800 dark:bg-slate-900">
+      <div
+        class="grid w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card lg:grid-cols-2 dark:border-slate-800 dark:bg-slate-900">
         <!-- Brand panel -->
-        <div class="relative hidden overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+        <div
+          class="relative hidden overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-10 text-white lg:flex lg:flex-col lg:justify-between">
           <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"></div>
           <div class="absolute -bottom-12 -left-8 h-48 w-48 rounded-full bg-white/5"></div>
 
@@ -16,7 +18,8 @@
             </div>
             <h1 class="mt-10 max-w-md text-4xl font-bold leading-tight">Kelola undangan wisuda dari satu dashboard.</h1>
             <p class="mt-4 max-w-sm text-sm leading-7 text-white/80">
-              Data siswa, nomor bangku otomatis, QR Code absensi, dan link undangan WhatsApp/email tersusun rapi untuk panitia.
+              Data siswa, nomor bangku otomatis, QR Code absensi, dan link undangan WhatsApp/email tersusun rapi untuk
+              panitia.
             </p>
           </div>
 
@@ -44,24 +47,30 @@
             <label class="mt-8 block">
               <span class="label">Email</span>
               <div class="relative">
-                <Icon icon="ph:envelope-bold" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input v-model="form.email" type="email" class="input pl-10" placeholder="admin@graduation.local" required />
+                <Icon icon="ph:envelope-bold"
+                  class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input v-model="form.email" type="email" class="input pl-10" placeholder="Masukan email" required />
               </div>
             </label>
 
             <label class="mt-4 block">
               <span class="label">Password</span>
               <div class="relative">
-                <Icon icon="ph:lock-bold" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="input px-10" placeholder="••••••••" required />
-                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" @click="showPassword = !showPassword">
+                <Icon icon="ph:lock-bold"
+                  class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="input px-10"
+                  placeholder="masukan password" required />
+                <button type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  @click="showPassword = !showPassword">
                   <Icon :icon="showPassword ? 'ph:eye-slash-bold' : 'ph:eye-bold'" />
                 </button>
               </div>
             </label>
 
             <transition name="fade">
-              <p v-if="auth.error" class="mt-4 flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
+              <p v-if="auth.error"
+                class="mt-4 flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
                 <Icon icon="ph:warning-circle-fill" /> {{ auth.error }}
               </p>
             </transition>
@@ -71,7 +80,8 @@
               {{ auth.loading ? "Memproses..." : "Login" }}
             </button>
 
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
+            <div
+              class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
               <p class="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
                 <Icon icon="ph:info-bold" class="text-primary-600" /> Default admin
               </p>
@@ -103,8 +113,8 @@ const features = [
 
 async function submit() {
   try {
-    await auth.login(form);
-    router.push("/admin/dashboard");
+    const data = await auth.login(form);
+    router.push(data.admin?.role === "super_admin" ? "/super/schools" : "/admin/dashboard");
   } catch {
     /* error message handled by store (auth.error) */
   }

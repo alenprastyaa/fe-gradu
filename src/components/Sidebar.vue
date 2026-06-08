@@ -2,7 +2,7 @@
   <nav class="flex h-screen flex-col bg-white dark:bg-slate-900">
     <!-- Brand -->
     <div class="flex items-center justify-between px-5 py-5">
-      <router-link to="/admin/dashboard" class="flex items-center gap-3">
+      <router-link :to="homePath" class="flex items-center gap-3">
         <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
           <Icon icon="ph:graduation-cap-fill" class="text-2xl" />
         </span>
@@ -79,7 +79,7 @@ const router = useRouter();
 const auth = useAuthStore();
 const userAvatar = defaultAvatar;
 
-const menu = [
+const schoolMenu = [
   { label: "Dashboard", icon: "ph:squares-four-bold", to: "/admin/dashboard", exact: true },
   { label: "Data Siswa", icon: "ph:student-bold", to: "/admin/students" },
   { label: "Nomor Bangku", icon: "ph:armchair-bold", to: "/admin/seats" },
@@ -89,7 +89,13 @@ const menu = [
   { label: "Reset Data", icon: "ph:trash-bold", to: "/admin/reset-data" },
 ];
 
+const superMenu = [
+  { label: "Setup Sekolah", icon: "ph:buildings-bold", to: "/super/schools", exact: true },
+];
+
 const userProfile = ref({ full_name: "Administrator", role: "admin" });
+const homePath = ref("/admin/dashboard");
+const menu = ref(schoolMenu);
 
 function isActive(item) {
   const path = router.currentRoute.value.path;
@@ -104,5 +110,9 @@ async function logout() {
 onMounted(() => {
   const stored = localStorage.getItem("user");
   if (stored) userProfile.value = JSON.parse(stored);
+  if (userProfile.value.role === "super_admin") {
+    homePath.value = "/super/schools";
+    menu.value = superMenu;
+  }
 });
 </script>

@@ -25,6 +25,7 @@ import GraduationEventSettings from "../views/graduation/EventSettings.vue";
 import GraduationResetData from "../views/graduation/ResetData.vue";
 import GraduationWhatsappBulk from "../views/graduation/WhatsappBulk.vue";
 import PublicInvite from "../views/graduation/PublicInvite.vue";
+import SuperSchools from "../views/super/Schools.vue";
 import { useAuthStore } from "@/store/auth";
 
 // layouts
@@ -47,58 +48,68 @@ const routes = [
     redirect: "/admin/dashboard",
   },
   {
+    path: "/super",
+    redirect: "/super/schools",
+  },
+  {
+    path: "/super/schools",
+    name: "SuperSchools",
+    component: SuperSchools,
+    meta: { title: "Setup Sekolah " + appname, requiresAuth: true, role: "super_admin" },
+  },
+  {
     path: "/admin/dashboard",
     name: "GraduationDashboard",
     component: GraduationDashboard,
-    meta: { title: "Dashboard " + appname, requiresAuth: true },
+    meta: { title: "Dashboard " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/students",
     name: "GraduationStudents",
     component: GraduationStudents,
-    meta: { title: "Data Siswa " + appname, requiresAuth: true },
+    meta: { title: "Data Siswa " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/students/import",
     name: "GraduationImportStudents",
     component: GraduationImportStudents,
-    meta: { title: "Import Siswa " + appname, requiresAuth: true },
+    meta: { title: "Import Siswa " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/students/whatsapp-bulk",
     name: "GraduationWhatsappBulk",
     component: GraduationWhatsappBulk,
-    meta: { title: "Link WhatsApp Terpilih " + appname, requiresAuth: true },
+    meta: { title: "Link WhatsApp Terpilih " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/seats",
     name: "GraduationSeatNumbers",
     component: GraduationSeatNumbers,
-    meta: { title: "Nomor Bangku " + appname, requiresAuth: true },
+    meta: { title: "Nomor Bangku " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/scanner",
     name: "GraduationScanner",
     component: GraduationScanner,
-    meta: { title: "Scanner Absensi " + appname, requiresAuth: true },
+    meta: { title: "Scanner Absensi " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/attendance",
     name: "GraduationAttendanceReport",
     component: GraduationAttendanceReport,
-    meta: { title: "Rekap Absensi " + appname, requiresAuth: true },
+    meta: { title: "Rekap Absensi " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/event-settings",
     name: "GraduationEventSettings",
     component: GraduationEventSettings,
-    meta: { title: "Template Undangan " + appname, requiresAuth: true },
+    meta: { title: "Template Undangan " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/reset-data",
     name: "GraduationResetData",
     component: GraduationResetData,
-    meta: { title: "Reset Data " + appname, requiresAuth: true },
+    meta: { title: "Reset Data " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/invite/:code",
@@ -248,8 +259,13 @@ router.beforeEach((to, from, next) => {
     next({ name: "Login", query: { redirect: to.fullPath } });
     return;
   }
+  const role = auth.admin?.role || localStorage.getItem("role");
+  if (to.meta.role && role && to.meta.role !== role) {
+    next(role === "super_admin" ? "/super/schools" : "/admin/dashboard");
+    return;
+  }
   if (to.name === "Login" && auth.isAuthenticated) {
-    next("/admin/dashboard");
+    next(role === "super_admin" ? "/super/schools" : "/admin/dashboard");
     return;
   }
   next();
