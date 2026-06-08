@@ -17,13 +17,17 @@
       </div>
     </div>
 
-    <div class="scanner-controls grid gap-2 sm:grid-cols-2">
+    <div class="scanner-controls grid gap-2 sm:grid-cols-3">
       <button class="btn-primary w-full" @click="start" :disabled="active || starting">
         <Icon :icon="starting ? 'ph:spinner-bold' : 'ph:play-bold'" :class="{ 'animate-spin': starting }" />
         {{ starting ? "Membuka..." : "Mulai Scan" }}
       </button>
       <button class="btn-secondary w-full" @click="stop" :disabled="!active && !starting">
         <Icon icon="ph:stop-bold" /> Stop
+      </button>
+      <button class="btn-secondary w-full" @click="toggleCamera" :disabled="starting">
+        <Icon icon="ph:camera-rotate-bold" />
+        {{ cameraMode === "environment" ? "Depan" : "Belakang" }}
       </button>
     </div>
   </div>
@@ -39,6 +43,7 @@ const scanner = ref(null);
 const active = ref(false);
 const starting = ref(false);
 const cameraError = ref("");
+const cameraMode = ref("environment");
 
 async function start() {
   if (active.value || starting.value) return;
@@ -50,7 +55,7 @@ async function start() {
   scanner.value = instance;
   try {
     await instance.start(
-      { facingMode: "environment" },
+      { facingMode: cameraMode.value },
       {
         fps: 12,
         qrbox: { width: qrSize, height: qrSize },
@@ -88,6 +93,16 @@ async function stop() {
     active.value = false;
     starting.value = false;
   }
+}
+
+async function toggleCamera() {
+  cameraMode.value = cameraMode.value === "environment" ? "user" : "environment";
+  if (!active.value) {
+    cameraError.value = "";
+    return;
+  }
+  await stop();
+  await start();
 }
 
 onBeforeUnmount(() => {
@@ -191,7 +206,7 @@ function cameraErrorMessage(error) {
     right: 0.875rem;
     bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
     z-index: 20;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 0.625rem;
     margin: 0;
     padding: 0.625rem;
@@ -203,6 +218,8 @@ function cameraErrorMessage(error) {
 
   .scanner-controls :deep(button) {
     min-height: 44px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 
   :deep(#qr-reader) {

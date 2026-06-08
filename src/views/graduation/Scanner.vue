@@ -111,7 +111,10 @@ onMounted(() => attendance.fetchSummary());
 <style scoped>
 @media (max-width: 767px) {
   .scanner-page {
-    height: calc(100dvh - var(--app-header-height, 64px));
+    position: fixed;
+    inset: var(--app-header-height, 64px) 0 0 0;
+    z-index: 10;
+    height: auto;
     margin: 0;
     padding: 0;
     overflow: hidden;
