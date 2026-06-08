@@ -80,13 +80,6 @@
               {{ auth.loading ? "Memproses..." : "Login" }}
             </button>
 
-            <div
-              class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
-              <p class="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
-                <Icon icon="ph:info-bold" class="text-primary-600" /> Default admin
-              </p>
-              <p class="mt-1 text-slate-500 dark:text-slate-400">admin@graduation.local / admin123</p>
-            </div>
           </form>
         </div>
       </div>
