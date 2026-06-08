@@ -1,18 +1,13 @@
 <template>
-  <div class="p-4">
-    <div class="bg-white dark:bg-gray-800 w-full p-6 font-lexend border dark:border-gray-700 rounded-md mt-5">
-      <div class="wrapper-link flex gap-4 text-sm text-gray-400">
-        <router-link to="#">Terms and conditions</router-link>
-        <router-link to="#">Privacy Policy</router-link>
-        <router-link to="#">Licensing</router-link>
-        <router-link to="#">Cookie Policy</router-link>
-        <router-link to="#">Contact</router-link>
-      </div>
+  <footer class="bg-slate-50 px-4 pb-6 pt-2 sm:px-6 dark:bg-black">
+    <div
+      class="flex flex-col items-center justify-between gap-2 border-t border-slate-200/80 pt-4 text-xs text-slate-400 sm:flex-row dark:border-slate-800">
+      <p>&copy; {{ year }} Graduation Invitation CMS</p>
+      <p>Dibuat oleh <span class="font-medium text-slate-500 dark:text-slate-300">Alen Prastya</span></p>
     </div>
-    <footer class="w-full box-border p-5 mt-3 text-center">
-      <p class="text-sm dark:text-gray-400">
-        Alen Prastya
-      </p>
-    </footer>
-  </div>
+  </footer>
 </template>
+
+<script setup>
+const year = new Date().getFullYear();
+</script>

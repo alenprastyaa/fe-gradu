@@ -11,10 +11,21 @@ import Vbutton from "../views/components/button.vue";
 import Vcard from "../views/components/card.vue";
 import Vdropdown from "../views/components/dropdown.vue";
 import Vmodal from "../views/components/modal.vue";
-import Login from "../views/layouts/auth/Login.vue";
 import Register from "../views/layouts/auth/Register.vue";
 import ForgotPassword from "../views/layouts/auth/forgot-password.vue";
 import Users from "../views/Users.vue"; // Import the new Users component
+import GraduationLogin from "../views/graduation/Login.vue";
+import GraduationDashboard from "../views/graduation/Dashboard.vue";
+import GraduationStudents from "../views/graduation/Students.vue";
+import GraduationImportStudents from "../views/graduation/ImportStudents.vue";
+import GraduationSeatNumbers from "../views/graduation/SeatNumbers.vue";
+import GraduationScanner from "../views/graduation/Scanner.vue";
+import GraduationAttendanceReport from "../views/graduation/AttendanceReport.vue";
+import GraduationEventSettings from "../views/graduation/EventSettings.vue";
+import GraduationResetData from "../views/graduation/ResetData.vue";
+import GraduationWhatsappBulk from "../views/graduation/WhatsappBulk.vue";
+import PublicInvite from "../views/graduation/PublicInvite.vue";
+import { useAuthStore } from "@/store/auth";
 
 // layouts
 import Blank from "../views/layouts/Blank.vue";
@@ -26,15 +37,80 @@ import PageMaintenance from "../views/layouts/error/maintenance.vue";
 import Tables from "../views/tables.vue";
 import Tabungan from "@/views/Tabungan.vue";
 
-var appname = " - Windzo Dashboard Admin Template";
+var appname = " - Graduation Invitation CMS";
 
 const routes = [
   // Routes
   {
     path: "/",
     name: "Dashboard",
+    redirect: "/admin/dashboard",
+  },
+  {
+    path: "/admin/dashboard",
+    name: "GraduationDashboard",
+    component: GraduationDashboard,
+    meta: { title: "Dashboard " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/students",
+    name: "GraduationStudents",
+    component: GraduationStudents,
+    meta: { title: "Data Siswa " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/students/import",
+    name: "GraduationImportStudents",
+    component: GraduationImportStudents,
+    meta: { title: "Import Siswa " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/students/whatsapp-bulk",
+    name: "GraduationWhatsappBulk",
+    component: GraduationWhatsappBulk,
+    meta: { title: "Link WhatsApp Terpilih " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/seats",
+    name: "GraduationSeatNumbers",
+    component: GraduationSeatNumbers,
+    meta: { title: "Nomor Bangku " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/scanner",
+    name: "GraduationScanner",
+    component: GraduationScanner,
+    meta: { title: "Scanner Absensi " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/attendance",
+    name: "GraduationAttendanceReport",
+    component: GraduationAttendanceReport,
+    meta: { title: "Rekap Absensi " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/event-settings",
+    name: "GraduationEventSettings",
+    component: GraduationEventSettings,
+    meta: { title: "Template Undangan " + appname, requiresAuth: true },
+  },
+  {
+    path: "/admin/reset-data",
+    name: "GraduationResetData",
+    component: GraduationResetData,
+    meta: { title: "Reset Data " + appname, requiresAuth: true },
+  },
+  {
+    path: "/invite/:code",
+    name: "PublicInvite",
+    component: PublicInvite,
+    meta: { title: "Undangan Graduation", hideNav: true },
+  },
+  {
+    path: "/template/dashboard",
+    name: "TemplateDashboard",
     component: Dashboard,
-    meta: { title: "Dashboard " + appname },
+    meta: { title: "Template Dashboard " + appname },
   },
   {
     path: "/users",
@@ -110,7 +186,7 @@ const routes = [
   {
     path: "/auth/login",
     name: "Login",
-    component: Login,
+    component: GraduationLogin,
     meta: { title: "Login" + appname, hideNav: true },
   },
   {
@@ -167,6 +243,15 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title;
+  const auth = useAuthStore();
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    next({ name: "Login", query: { redirect: to.fullPath } });
+    return;
+  }
+  if (to.name === "Login" && auth.isAuthenticated) {
+    next("/admin/dashboard");
+    return;
+  }
   next();
 });
 

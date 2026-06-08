@@ -1,171 +1,117 @@
 <template>
-  <header class="bg-white dark:bg-gray-800 p-2 border-b-2 dark:border-gray-700">
-    <div class="wrap-header flex items-center gap-5 justify-between flex-wrap">
-      <div class="flex flex-no-shrink items-center">
-        <button class="text-gray-500 lg:hidden ml-3 block" @click="$emit('sidebarToggle', true)">
-          <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="2em" height="2em"
-            preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16">
-            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M2.75 12.25h10.5m-10.5-4h10.5m-10.5-4h10.5" />
-          </svg>
+  <header
+    class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80"
+  >
+    <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <!-- Left: mobile toggle + page title -->
+      <div class="flex items-center gap-3">
+        <button
+          class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden dark:hover:bg-slate-800"
+          @click="$emit('sidebarToggle', true)"
+        >
+          <Icon icon="ph:list-bold" class="text-xl" />
         </button>
-        <div
-          class="input-box border dark:bg-gray-900 lg:ml-0 ml-5 dark:border-gray-700 rounded-md hidden lg:w-search w-full box-border lg:flex md:flex focus-within:bg-gray-100 dark:focus-within:bg-gray-700">
-          <span class="text-3xl p-2 text-gray-400">
-            <Icon icon="ei:search" />
-          </span>
-          <input type="text" placeholder="Search..."
-            class="p-3 w-full bg-white dark:bg-gray-900 dark:text-gray-400 rounded-md outline-none focus:bg-gray-100 dark:focus:bg-gray-700" />
+        <div>
+          <h1 class="text-base font-semibold text-slate-900 sm:text-lg dark:text-white">{{ pageTitle }}</h1>
+          <p class="hidden text-xs text-slate-400 sm:block">{{ today }}</p>
         </div>
       </div>
 
-      <div class="mr-5 flex gap-3">
-        <button class="lg:hidden block mr-5 text-2xl text-gray-500 relative">
-          <i>
-            <Icon icon="ic:outline-search" />
-          </i>
+      <!-- Right: actions -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button
+          class="hidden rounded-lg p-2.5 text-slate-500 transition hover:bg-slate-100 sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800"
+          :title="fullscreenMode ? 'Keluar layar penuh' : 'Layar penuh'"
+          @click="fullscreenToggle"
+        >
+          <Icon :icon="fullscreenMode ? 'ic:outline-fullscreen-exit' : 'ic:outline-fullscreen'" class="text-xl" />
         </button>
 
-        <button @click="fullscreenToggle" class="mr-5 text-2xl text-gray-500 relative">
-          <i v-if="!fullscreenMode">
-            <Icon icon="ic:outline-fullscreen" />
-          </i>
-          <i v-else>
-            <Icon icon="ic:outline-fullscreen-exit" />
-          </i>
+        <button
+          class="rounded-lg p-2.5 text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+          :title="darkMode ? 'Mode terang' : 'Mode gelap'"
+          @click="setTheme(!darkMode)"
+        >
+          <Icon :icon="darkMode ? 'ph:sun-bold' : 'ph:moon-bold'" class="text-xl" />
         </button>
 
-        <button @click="setTheme(true)" class="mr-5 text-2xl text-gray-500" v-if="!darkMode">
-          <Icon icon="ph:sun-dim" />
-        </button>
-        <button @click="setTheme(false)" v-else class="mr-5 text-2xl text-gray-500">
-          <Icon icon="ri:moon-fill" />
-        </button>
-        <button @blur="menuToggleBlur" @click="menuToggle">
-          <div class="user-avatar flex p-1 cursor-pointer rounded-md">
-            <div>
-              <img src="../assets/img/user.jpg"
-                class="rounded-full mr-4 w-10 h-10 p-1 ring-1 ring-gray-300 dark:ring-gray-500" alt="" />
+        <div class="mx-1 hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700"></div>
+
+        <!-- User -->
+        <div class="relative">
+          <button
+            class="flex items-center gap-2.5 rounded-xl p-1 pr-2 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+            @click="menuToggle"
+            @blur="menuToggleBlur"
+          >
+            <img :src="userAvatar" class="h-9 w-9 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700" alt="" />
+            <span class="hidden text-left md:block">
+              <span class="block text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">{{ userProfile.full_name }}</span>
+              <span class="block text-xs capitalize leading-tight text-slate-400">{{ userProfile.role }}</span>
+            </span>
+            <Icon icon="ph:caret-down-bold" class="hidden text-xs text-slate-400 md:block" />
+          </button>
+
+          <transition name="fade">
+            <div
+              v-show="menu"
+              class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card dark:border-slate-700 dark:bg-slate-800"
+            >
+              <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+                <p class="text-xs text-slate-400">Masuk sebagai</p>
+                <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ userProfile.full_name }}</p>
+              </div>
+              <button
+                class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                @mousedown.prevent="logout"
+              >
+                <Icon icon="ph:sign-out-bold" class="text-lg" />
+                Keluar
+              </button>
             </div>
-            <div class="text-left lg:block md:block hidden">
-              <h2 class="dark:text-white text-gray-800">Hi, {{ userProfile.full_name }}</h2>
-              <p class="text-xs text-gray-400 dark:text-gray-500 capitalize">
-                {{ userProfile.role }}
-              </p>
-            </div>
-          </div>
-        </button>
-
-        <transition name="fade">
-          <div id="dropdownSmall" v-show="menu"
-            class="block absolute right-10 mt-12 z-50 w-52 border dark:border-gray-700 bg-white dark:bg-gray-800 rounded divide-y dark:divide-gray-700 divide-gray-100 shadow">
-            <div class="py-3 px-4 text-sm text-gray-900 dark:text-gray-200">
-              <div>Logged As</div>
-              <div class="font-medium truncate">{{ userProfile.full_name }}</div>
-            </div>
-            <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownSmallButton">
-              <li>
-                <a href="#" class="block py-2 px-4 hover:bg-primary hover:text-white">User Profile</a>
-              </li>
-              <li>
-                <a href="#" class="block py-2 px-4 hover:bg-primary hover:text-white">Settings</a>
-              </li>
-
-              <li>
-                <a href="https://github.com/sahrullahh"
-                  class="block py-2 px-4 hover:bg-primary hover:text-white">Github</a>
-              </li>
-            </ul>
-
-            <div class="py-1">
-              <a href="#" @click="logout"
-                class="block py-2 px-4 text-sm text-gray-700 dark:text-gray-200 hover:bg-primary hover:text-white">Sign
-                out</a>
-            </div>
-          </div>
-        </transition>
+          </transition>
+        </div>
       </div>
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { Icon } from '@iconify/vue';
-import { fullscreen as handleFullscreen } from '@/helper/fullscreen';
-import { setDarkMode as handleSetDarkMode, loadDarkMode } from '@/helper/theme';
+import { ref, computed, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
+import { fullscreen as handleFullscreen } from "@/helper/fullscreen";
+import { setDarkMode as handleSetDarkMode } from "@/helper/theme";
+import { useAuthStore } from "@/store/auth";
+import defaultAvatar from "@/assets/img/user.jpg";
 
 const router = useRouter();
-const emit = defineEmits(['sidebarToggle']);
+const route = useRoute();
+const auth = useAuthStore();
+defineEmits(["sidebarToggle"]);
 
-// State Profile dari LocalStorage
-const userProfile = ref({
-  full_name: 'User',
-  role: 'Guest'
-});
-
-// Reactive State
+const userAvatar = defaultAvatar;
+const userProfile = ref({ full_name: "Administrator", role: "admin" });
 const menu = ref(false);
 const darkMode = ref(false);
-const notification = ref(false);
 const fullscreenMode = ref(false);
 
-const notifList = ref([
-  {
-    name: 'Elizabeth Begum',
-    image: 'user1.png',
-    message:
-      'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Tempora culpa blanditiis neque animi sequi sunt incidunt beatae? Aperiam facilis consectetur,',
-    hours: '12 hours ago',
-  },
-  {
-    name: 'Ethan Roger',
-    image: 'user2.png',
-    message:
-      'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Tempora culpa blanditiis neque animi sequi sunt incidunt beatae? Aperiam facilis consectetur,',
-    hours: '12 hours ago',
-  },
-  {
-    name: 'Taylor neal',
-    image: 'user4.png',
-    message:
-      'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Tempora culpa blanditiis neque animi sequi sunt incidunt beatae? Aperiam facilis consectetur,',
-    hours: '2 days hours ago',
-  },
-]);
+const pageTitle = computed(() => {
+  const raw = route.meta.title || "Dashboard";
+  return raw.split(" - ")[0].trim();
+});
 
-const route = useRoute();
-
-// Watchers
-watch(
-  () => route.path,
-  () => {
-    menu.value = false;
-    notification.value = false;
-  }
+const today = computed(() =>
+  new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
 );
 
-// Methods
-const menuToggle = () => {
-  menu.value = !menu.value;
-};
+watch(
+  () => route.path,
+  () => (menu.value = false)
+);
 
-const menuToggleBlur = () => {
-  menu.value = false;
-};
-
-const notifToggle = () => {
-  notification.value = !notification.value;
-};
-
-const notifToggleBlur = () => {
-  notification.value = false;
-};
-
-const limitText = (message) => {
-  return message.length > 25 ? message.substring(0, 25) + '...' : message;
-};
+const menuToggle = () => (menu.value = !menu.value);
+const menuToggleBlur = () => (menu.value = false);
 
 const fullscreenToggle = () => {
   fullscreenMode.value = !fullscreenMode.value;
@@ -175,33 +121,22 @@ const fullscreenToggle = () => {
 const setTheme = (bool) => {
   darkMode.value = bool;
   handleSetDarkMode(bool);
+  localStorage.setItem("theme", bool ? "dark" : "light");
 };
 
-const imageAssets = (url) => {
-  return new URL(`../assets/img/${url}`, import.meta.url).href;
+const logout = async () => {
+  await auth.logout();
+  router.push({ name: "Login" });
 };
 
-const logout = () => {
-  localStorage.clear();
-  router.push({
-    name: "Login"
-  });
-};
-
-// Lifecycle Hooks
 onMounted(() => {
-  setTheme(false);
+  setTheme(localStorage.getItem("theme") === "dark");
 
   document.onfullscreenchange = () => {
     fullscreenMode.value = !!document.fullscreenElement;
   };
 
-  // AMBIL DATA USER DARI LOCALSTORAGE
-  const storedUser = localStorage.getItem('user');
-  if (storedUser) {
-    userProfile.value = JSON.parse(storedUser);
-  }
+  const stored = localStorage.getItem("user");
+  if (stored) userProfile.value = JSON.parse(stored);
 });
 </script>
-
-<style></style>

@@ -1,33 +1,39 @@
 <template>
   <!-- App -->
-  <div class="flex bg-gray-50 font-lexend dark:bg-gray-900">
+  <div class="flex min-h-screen bg-slate-50 font-lexend text-slate-800 dark:bg-slate-950 dark:text-slate-200">
+    <!-- Mobile overlay -->
+    <transition name="fade">
+      <div
+        v-if="sidebar && !$route.meta.hideNav"
+        class="fixed inset-0 z-20 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+        @click="close"
+      ></div>
+    </transition>
+
     <div
       v-if="!$route.meta.hideNav"
       class="lg:block"
       :class="{ 'lg:block hidden': !sidebar, block: sidebar }"
     >
       <div
-        class="lg:flex-auto w-sidebar bg-white dark:bg-gray-800 border-r-2 dark:border-gray-700 lg:z-0 z-20 overflow-auto lg:relative fixed"
+        class="lg:flex-auto w-sidebar bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 lg:z-0 z-30 overflow-auto lg:relative fixed"
       >
         <perfect-scrollbar class="h-screen">
           <Sidebar
             v-if="!$route.meta.hideNav"
             @sidebarToggle="close"
           />
-          <!-- <sidebarlist
-            v-if="!$route.meta.hideNav"
-            @sidebarToggle="close"
-          /> -->
         </perfect-scrollbar>
       </div>
     </div>
 
     <div
-      class="flex-auto w-full overflow-auto h-screen transition-colors"
+      class="flex flex-auto w-full flex-col overflow-auto h-screen bg-slate-50 transition-colors dark:bg-black"
       id="body-scroll"
     >
       <Header
         v-if="!$route.meta.hideNav"
+        class="shrink-0"
         @sidebarToggle="open"
       />
 
@@ -37,7 +43,10 @@
       >
         <router-view />
       </transition>
-      <Footer v-if="!$route.meta.hideNav" />
+      <Footer
+        v-if="!$route.meta.hideNav"
+        class="mt-auto shrink-0"
+      />
     </div>
   </div>
   <!-- End app -->

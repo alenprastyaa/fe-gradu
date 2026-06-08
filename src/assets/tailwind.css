@@ -4,6 +4,80 @@
 
 @tailwind utilities;
 
+/* =========================================================
+   Graduation CMS — Design System
+   Reusable component classes so markup stays clean & consistent.
+   ========================================================= */
+@layer components {
+  /* Surfaces */
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-soft transition-colors dark:border-slate-700/60 dark:bg-slate-800;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium leading-none transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-offset-slate-900;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white shadow-sm hover:bg-primary-700 hover:shadow active:scale-[.98] focus:ring-primary-300 dark:focus:ring-primary-500/40;
+  }
+  .btn-secondary {
+    @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-[.98] focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/70 dark:focus:ring-slate-600;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white shadow-sm hover:bg-rose-700 active:scale-[.98] focus:ring-rose-300;
+  }
+  .btn-ghost {
+    @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700/70;
+  }
+
+  /* Icon-only button */
+  .icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-slate-100;
+  }
+
+  /* Forms */
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300;
+  }
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary-100 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-primary-500 dark:focus:ring-primary-500/20;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  .badge-success {
+    @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20;
+  }
+  .badge-warning {
+    @apply badge bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200/70 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20;
+  }
+
+  /* Table shell */
+  .table-wrap {
+    @apply overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-soft dark:border-slate-700/60 dark:bg-slate-800;
+  }
+  .th {
+    @apply whitespace-nowrap px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400;
+  }
+  .td {
+    @apply whitespace-nowrap px-5 py-3.5 text-sm text-slate-600 dark:text-slate-300;
+  }
+
+  /* Page heading helpers */
+  .page-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400;
+  }
+  .page-title {
+    @apply text-xl font-semibold text-slate-900 sm:text-2xl dark:text-white;
+  }
+  .page-subtitle {
+    @apply mt-1 text-sm text-slate-500 dark:text-slate-400;
+  }
+}
+
 /* @layer utilities {
   @variants responsive {
     .masonry {
@@ -40,9 +114,430 @@
   opacity: 0;
 }
 
+html,
+body,
+#app {
+  min-height: 100%;
+  background: #020617;
+}
+
 body {
   overflow: hidden;
-  background-color: "#EEF6FF";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   SweetAlert2 — modern, professional dialogs, toasts & lists
+   ============================================================ */
+
+/* Backdrop with blur */
+.graduation-swal-container {
+  z-index: 9999 !important;
+  padding: 1rem !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+}
+
+/* Popup */
+.graduation-swal-popup {
+  width: min(92vw, 432px) !important;
+  max-height: calc(100vh - 2rem) !important;
+  overflow-y: auto !important;
+  border-radius: 24px !important;
+  padding: 2rem 1.75rem 1.75rem !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 10px 25px -12px rgba(15, 23, 42, 0.25), 0 32px 64px -28px rgba(15, 23, 42, 0.4) !important;
+  font-family: Lexend, ui-sans-serif, system-ui, sans-serif !important;
+}
+.dark .graduation-swal-popup {
+  background: #0f172a !important;
+  border-color: rgba(51, 65, 85, 0.85) !important;
+  box-shadow: 0 10px 25px -12px rgba(0, 0, 0, 0.6), 0 32px 70px -28px rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Entrance / exit animation */
+.graduation-swal-popup.swal2-show {
+  animation: graduationPop 0.34s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.graduation-swal-popup.swal2-hide {
+  animation: graduationPopOut 0.18s ease-in forwards !important;
+}
+@keyframes graduationPop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes graduationPopOut {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+/* Icon — softened with a subtle colored halo */
+.graduation-swal-icon {
+  width: 4.5rem !important;
+  height: 4.5rem !important;
+  margin: 0.25rem auto 1.25rem !important;
+  border-width: 4px !important;
+}
+.graduation-swal-icon.swal2-success {
+  box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.08) !important;
+}
+.graduation-swal-icon.swal2-error {
+  box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.08) !important;
+}
+.graduation-swal-icon.swal2-warning {
+  box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1) !important;
+}
+.graduation-swal-icon.swal2-info {
+  box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1) !important;
+}
+.graduation-swal-icon.swal2-question {
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+  box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Title & text */
+.graduation-swal-title {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #1e293b !important;
+}
+.dark .graduation-swal-title {
+  color: #f1f5f9 !important;
+}
+.graduation-swal-html {
+  margin: 0.6rem 0 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  color: #64748b !important;
+}
+.dark .graduation-swal-html {
+  color: #94a3b8 !important;
+}
+
+/* Actions / buttons */
+.graduation-swal-actions {
+  display: flex !important;
+  width: 100% !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 0.625rem !important;
+  margin: 1.5rem 0 0 !important;
+}
+.graduation-swal-confirm,
+.graduation-swal-cancel {
+  display: inline-flex !important;
+  min-height: 2.75rem !important;
+  flex: 1 1 auto !important;
+  min-width: 7rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.9rem !important;
+  padding: 0.7rem 1.25rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease !important;
+}
+.graduation-swal-confirm {
+  border: none !important;
+  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px -6px rgba(79, 70, 229, 0.5) !important;
+}
+.graduation-swal-confirm:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 12px 24px -6px rgba(79, 70, 229, 0.55) !important;
+}
+.graduation-swal-confirm:active {
+  transform: scale(0.97) !important;
+}
+.graduation-swal-confirm:focus-visible {
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.35) !important;
+}
+.graduation-swal-confirm-danger {
+  background: linear-gradient(135deg, #fb7185, #e11d48) !important;
+  box-shadow: 0 8px 18px -6px rgba(225, 29, 72, 0.5) !important;
+}
+.graduation-swal-confirm-danger:hover {
+  box-shadow: 0 12px 24px -6px rgba(225, 29, 72, 0.55) !important;
+}
+.graduation-swal-confirm-danger:focus-visible {
+  box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.35) !important;
+}
+.graduation-swal-cancel {
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+}
+.graduation-swal-cancel:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px) !important;
+}
+.graduation-swal-cancel:active {
+  transform: scale(0.97) !important;
+}
+.dark .graduation-swal-cancel {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+.dark .graduation-swal-cancel:hover {
+  background: #334155 !important;
+}
+
+/* Error / info list */
+.swal2-html-list {
+  margin: 0.85rem 0 0 !important;
+  padding: 0.75rem 0.9rem !important;
+  list-style: none !important;
+  text-align: left !important;
+  border-radius: 0.85rem !important;
+  background: #f8fafc !important;
+  border: 1px solid #eef2f7 !important;
+  max-height: 14rem !important;
+  overflow-y: auto !important;
+}
+.dark .swal2-html-list {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+.swal2-html-list li {
+  position: relative !important;
+  padding-left: 1.25rem !important;
+  font-size: 0.85rem !important;
+  color: #475569 !important;
+}
+.dark .swal2-html-list li {
+  color: #cbd5e1 !important;
+}
+.swal2-html-list li::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0.3rem !important;
+  top: 0.55rem !important;
+  width: 0.4rem !important;
+  height: 0.4rem !important;
+  border-radius: 9999px !important;
+  background: #f43f5e !important;
+}
+.swal2-html-list li + li {
+  margin-top: 0.4rem !important;
+}
+.swal2-html-message {
+  margin: 0 !important;
+}
+
+/* Toast */
+.graduation-toast {
+  border-radius: 1rem !important;
+  padding: 0.85rem 1rem !important;
+  background: rgba(15, 23, 42, 0.92) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  box-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.55) !important;
+  color: #e2e8f0 !important;
+  font-family: Lexend, ui-sans-serif, system-ui, sans-serif !important;
+}
+.graduation-toast.swal2-icon-success {
+  background: #15803d !important;
+  border-color: rgba(34, 197, 94, 0.35) !important;
+  color: #f0fdf4 !important;
+}
+.graduation-toast .swal2-title {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: #f1f5f9 !important;
+  margin: 0 !important;
+}
+.graduation-toast.swal2-icon-success .swal2-title {
+  color: #f0fdf4 !important;
+}
+.graduation-toast .swal2-html-container {
+  font-size: 0.8rem !important;
+  color: #94a3b8 !important;
+  margin: 0.15rem 0 0 !important;
+}
+.graduation-toast.swal2-icon-success .swal2-html-container {
+  color: #dcfce7 !important;
+}
+.graduation-toast .swal2-timer-progress-bar {
+  background: rgba(148, 163, 184, 0.5) !important;
+}
+.graduation-toast.swal2-icon-success .swal2-timer-progress-bar {
+  background: #f0fdf4 !important;
+}
+.graduation-toast.swal2-icon-error .swal2-timer-progress-bar {
+  background: #ef4444 !important;
+}
+.graduation-toast.swal2-icon-warning .swal2-timer-progress-bar {
+  background: #f59e0b !important;
+}
+.graduation-toast .swal2-icon {
+  margin: 0 0.6rem 0 0 !important;
+  width: 1.6rem !important;
+  height: 1.6rem !important;
+}
+.graduation-swal-status-popup {
+  width: min(90vw, 360px) !important;
+  overflow: hidden !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  padding: 1.1rem !important;
+  box-shadow: 0 20px 54px rgba(15, 23, 42, 0.2) !important;
+}
+.dark .graduation-swal-status-popup {
+  background: #0f172a !important;
+  border-color: rgba(51, 65, 85, 0.85) !important;
+}
+.dark .graduation-scan-title {
+  color: #f1f5f9 !important;
+}
+.dark .graduation-scan-text {
+  color: #94a3b8 !important;
+}
+.graduation-swal-status-html {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.graduation-swal-status-progress {
+  background: #e2e8f0 !important;
+}
+.graduation-swal-status-success .graduation-swal-status-progress {
+  background: #047857 !important;
+}
+.graduation-swal-status-error .graduation-swal-status-progress {
+  background: #ef4444 !important;
+}
+.graduation-scan-icon {
+  display: inline-flex !important;
+  width: 3.35rem !important;
+  height: 3.35rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 9999px !important;
+  margin: 0 auto 0.85rem !important;
+  border: 1px solid transparent !important;
+}
+.graduation-scan-icon svg {
+  width: 1.65rem !important;
+  height: 1.65rem !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.75 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+.graduation-scan-icon-success {
+  background: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  color: #047857 !important;
+  box-shadow: 0 10px 24px rgba(4, 120, 87, 0.22) !important;
+}
+.graduation-scan-icon-error {
+  background: #fee2e2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.2) !important;
+}
+.graduation-scan-content {
+  text-align: center !important;
+}
+.graduation-scan-title {
+  margin: 0 !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  color: #0f172a !important;
+}
+.graduation-scan-text {
+  margin: 0.5rem auto 0 !important;
+  max-width: 18rem !important;
+  font-size: 0.86rem !important;
+  line-height: 1.5 !important;
+  color: #64748b !important;
+}
+.graduation-scan-loading {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  margin-top: 1rem !important;
+}
+.graduation-scan-loading span {
+  width: 0.45rem !important;
+  height: 0.45rem !important;
+  border-radius: 9999px !important;
+  animation: scanPulse 1s ease-in-out infinite !important;
+}
+.graduation-scan-loading span:nth-child(2) {
+  animation-delay: 0.15s !important;
+}
+.graduation-scan-loading span:nth-child(3) {
+  animation-delay: 0.3s !important;
+}
+.graduation-swal-status-success .graduation-scan-loading span {
+  background: #047857 !important;
+}
+.graduation-swal-status-error .graduation-scan-loading span {
+  background: #ef4444 !important;
+}
+@keyframes scanPulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* Slim, unobtrusive scrollbars */
+.ps__rail-y,
+.ps__rail-x {
+  z-index: 30;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.5);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .flex-sidebar {

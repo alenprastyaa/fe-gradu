@@ -1,59 +1,65 @@
 <template>
-  <nav class="sidebar bg-white dark:bg-gray-800">
-    <div class="sidebar-head p-4">
-      <router-link to="/" class="flex">
-        <img class="w-8 mt-1" src="@/assets/logo/logo.svg" alt="logo windzo" />
-        <h2 class="text-2xl font-normal ml-3 mt-2 text-gray-800 dark:text-gray-200" translate="no">
-          Tabungan Lebaran<span class="text-primary">.</span>
-        </h2>
+  <nav class="flex h-screen flex-col bg-white dark:bg-slate-900">
+    <!-- Brand -->
+    <div class="flex items-center justify-between px-5 py-5">
+      <router-link to="/admin/dashboard" class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
+          <Icon icon="ph:graduation-cap-fill" class="text-2xl" />
+        </span>
+        <span class="leading-tight">
+          <span class="block text-base font-semibold text-slate-900 dark:text-white" translate="no">Graduation</span>
+          <span class="block text-[11px] font-medium uppercase tracking-wider text-slate-400">Invitation CMS</span>
+        </span>
       </router-link>
-      <div class="bg-gray-700 absolute mt-3 dark:block hidden rounded-md py-1 px-2 text-xs text-gray-200">
-        Dark mode
-      </div>
-      <button class="lg:hidden block dark:text-gray-400 float-right -mt-7" @click="$emit('sidebarToggle')">
-        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="25px" height="25px"
-          preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
-          <path fill="currentColor"
-            d="M7.219 5.781L5.78 7.22L14.563 16L5.78 24.781l1.44 1.439L16 17.437l8.781 8.782l1.438-1.438L17.437 16l8.782-8.781L24.78 5.78L16 14.563z" />
-        </svg>
+      <button
+        class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:hidden dark:hover:bg-slate-800"
+        @click="$emit('sidebarToggle')"
+      >
+        <Icon icon="ph:x-bold" class="text-xl" />
       </button>
     </div>
 
-    <div class="sidebar-list p-4 mt-4 divide-y dark:divide-gray-700">
-      <div class="pb-5">
-        <p class="font-medium text-gray-400 dark:text-gray-400">Menu</p>
-        <div class="wrap-item mt-4 dark:text-gray-500">
+    <!-- Navigation -->
+    <div class="flex-1 overflow-y-auto px-3 pb-4">
+      <p class="px-3 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Menu</p>
+      <ul class="space-y-1">
+        <li v-for="item in menu" :key="item.to">
+          <router-link
+            :to="item.to"
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+            :class="
+              isActive(item)
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+            "
+          >
+            <Icon
+              :icon="item.icon"
+              class="text-xl"
+              :class="isActive(item) ? 'text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'"
+            />
+            <span>{{ item.label }}</span>
+          </router-link>
+        </li>
+      </ul>
+    </div>
 
-          <div class="item">
-            <router-link to="/"
-              class="w-full flex text-left rounded-md box-border p-3 hover:bg-gray-200 dark:hover:bg-gray-700">
-              <span class="mr-3 text-xl">
-                <Icon icon="bxs:dashboard" />
-              </span>
-              <span class="w-full"> Dashboard </span>
-            </router-link>
+    <!-- Footer card -->
+    <div class="border-t border-slate-200/80 p-3 dark:border-slate-800">
+      <div class="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/60">
+        <div class="flex items-center gap-3">
+          <img :src="userAvatar" class="h-9 w-9 rounded-full object-cover ring-2 ring-white dark:ring-slate-700" alt="" />
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ userProfile.full_name }}</p>
+            <p class="truncate text-xs capitalize text-slate-400">{{ userProfile.role }}</p>
           </div>
-
-          <div class="item mt-3" v-if="role === 'admin'">
-            <router-link to="/users"
-              class="w-full flex text-left rounded-md box-border p-3 hover:bg-gray-200 dark:hover:bg-gray-700">
-              <span class="mr-3 text-xl">
-                <Icon icon="clarity:users-line" />
-              </span>
-              <span class="w-full"> Pengguna </span>
-            </router-link>
-          </div>
-
-          <div class="item mt-3" v-if="role === 'admin'">
-            <router-link to="/tabungan"
-              class="w-full flex text-left rounded-md box-border p-3 hover:bg-gray-200 dark:hover:bg-gray-700">
-              <span class="mr-3 text-xl">
-                <Icon icon="ph:wallet-light" />
-              </span>
-              <span class="w-full"> Tabungan </span>
-            </router-link>
-          </div>
-
+          <button
+            class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+            title="Keluar"
+            @click="logout"
+          >
+            <Icon icon="ph:sign-out-bold" class="text-lg" />
+          </button>
         </div>
       </div>
     </div>
@@ -61,16 +67,42 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
-import MenuAccordion from "./MenuAccordion.vue";
+import { useAuthStore } from "@/store/auth";
+import defaultAvatar from "@/assets/img/user.jpg";
 
-// Mengambil role dari localStorage
-const role = localStorage.getItem("role")
+defineEmits(["sidebarToggle"]);
 
-// Mendefinisikan event emit karena di template ada @click="$emit('sidebarToggle')"
-defineEmits(['sidebarToggle']);
+const router = useRouter();
+const auth = useAuthStore();
+const userAvatar = defaultAvatar;
+
+const menu = [
+  { label: "Dashboard", icon: "ph:squares-four-bold", to: "/admin/dashboard", exact: true },
+  { label: "Data Siswa", icon: "ph:student-bold", to: "/admin/students" },
+  { label: "Nomor Bangku", icon: "ph:armchair-bold", to: "/admin/seats" },
+  { label: "Scanner Absensi", icon: "ph:qr-code-bold", to: "/admin/scanner" },
+  { label: "Rekap Absensi", icon: "ph:chart-bar-bold", to: "/admin/attendance" },
+  { label: "Template Undangan", icon: "ph:envelope-simple-bold", to: "/admin/event-settings" },
+  { label: "Reset Data", icon: "ph:trash-bold", to: "/admin/reset-data" },
+];
+
+const userProfile = ref({ full_name: "Administrator", role: "admin" });
+
+function isActive(item) {
+  const path = router.currentRoute.value.path;
+  return item.exact ? path === item.to : path.startsWith(item.to);
+}
+
+async function logout() {
+  await auth.logout();
+  router.push({ name: "Login" });
+}
+
+onMounted(() => {
+  const stored = localStorage.getItem("user");
+  if (stored) userProfile.value = JSON.parse(stored);
+});
 </script>
-
-<style scoped>
-/* Tambahkan style jika diperlukan */
-</style>

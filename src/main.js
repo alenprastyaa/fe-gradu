@@ -12,8 +12,8 @@ import "./assets/sass/css/windzo.css";
 import vClickOutside from "click-outside-vue3";
 
 const app = createApp(App);
-app.use(router);
 app.use(createPinia());
+app.use(router);
 app.use(VueApexCharts);
 app.use(PerfectScrollbar);
 app.use(vClickOutside);

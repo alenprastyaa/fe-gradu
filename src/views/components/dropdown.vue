@@ -310,14 +310,15 @@
 <script>
   import { Icon } from "@iconify/vue";
   import Dropdown from "../../components/Dropdown.vue";
+  import { swalToast } from "@/helper/swal";
   export default {
     components: {
       Dropdown,
       Icon,
     },
     methods: {
-      alert() {
-        alert("Hello");
+      showMessage() {
+        swalToast("info", "Hello");
       },
     },
   };

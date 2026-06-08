@@ -216,6 +216,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { swalConfirm, swalError } from '@/helper/swal';
 
 const token = localStorage.getItem('token');
 const baseUrl = 'https://alentest.my.id/tabungan';
@@ -467,7 +468,13 @@ const submitEditUser = async () => {
 };
 
 const confirmDelete = async (user) => {
-  const isConfirmed = window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${user.username}"? Tindakan ini tidak dapat dibatalkan.`);
+  const isConfirmed = await swalConfirm({
+    title: 'Hapus pengguna?',
+    text: `Pengguna "${user.username}" akan dihapus permanen.`,
+    confirmButtonText: 'Hapus',
+    icon: 'warning',
+    danger: true,
+  });
 
   if (!isConfirmed) return;
 
@@ -486,7 +493,7 @@ const confirmDelete = async (user) => {
     globalSuccessMessage.value = `Pengguna ${user.username} berhasil dihapus!`;
     fetchUsers();
   } catch (error) {
-    alert(`Error: ${error.message}`);
+    swalError('Gagal menghapus pengguna', error.message);
   }
 };
 

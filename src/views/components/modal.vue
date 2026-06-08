@@ -240,16 +240,17 @@
 
 <script>
   import Modal from "@/components/modal.vue";
+  import { swalError, swalToast } from "@/helper/swal";
   export default {
     components: {
       Modal,
     },
     methods: {
       test() {
-        alert("clicked!");
+        swalToast("info", "Clicked");
       },
       confirmDelete() {
-        alert("deleted!");
+        swalError("Deleted");
       },
     },
   };
