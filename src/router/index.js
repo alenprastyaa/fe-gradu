@@ -91,7 +91,7 @@ const routes = [
     path: "/admin/scanner",
     name: "GraduationScanner",
     component: GraduationScanner,
-    meta: { title: "Scanner Absensi " + appname, requiresAuth: true, role: "school_admin" },
+    meta: { title: "Scanner Absensi " + appname, requiresAuth: true, role: "school_admin", hideFooter: true },
   },
   {
     path: "/admin/attendance",

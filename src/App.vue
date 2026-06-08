@@ -44,7 +44,7 @@
         <router-view />
       </transition>
       <Footer
-        v-if="!$route.meta.hideNav"
+        v-if="!$route.meta.hideNav && !$route.meta.hideFooter"
         class="mt-auto shrink-0"
       />
     </div>
