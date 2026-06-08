@@ -12,8 +12,9 @@
           <Icon icon="ph:file-xls-bold" /> Export
         </button>
         <button class="btn-secondary" :disabled="emailSyncing" @click="syncEmailHistory">
-          <Icon :icon="emailSyncing ? 'ph:spinner-bold' : 'ph:clock-counter-clockwise-bold'" :class="{ 'animate-spin': emailSyncing }" />
-          {{ emailSyncing ? "Sync..." : "Sync Brevo" }}
+          <Icon :icon="emailSyncing ? 'ph:spinner-bold' : 'ph:clock-counter-clockwise-bold'"
+            :class="{ 'animate-spin': emailSyncing }" />
+          {{ emailSyncing ? "Sync..." : "Sync Email" }}
         </button>
         <router-link class="btn-secondary" to="/admin/students/import">
           <Icon icon="ph:upload-simple-bold" /> Import
@@ -48,22 +49,12 @@
       </div>
 
       <div class="class-filter-row">
-        <button
-          type="button"
-          class="class-filter-chip"
-          :class="{ active: filters.class_name === '' }"
-          @click="setClassFilter('')"
-        >
+        <button type="button" class="class-filter-chip" :class="{ active: filters.class_name === '' }"
+          @click="setClassFilter('')">
           Semua kelas
         </button>
-        <button
-          v-for="item in students.classes"
-          :key="item"
-          type="button"
-          class="class-filter-chip"
-          :class="{ active: filters.class_name === item }"
-          @click="setClassFilter(item)"
-        >
+        <button v-for="item in students.classes" :key="item" type="button" class="class-filter-chip"
+          :class="{ active: filters.class_name === item }" @click="setClassFilter(item)">
           {{ item }}
         </button>
       </div>
@@ -74,7 +65,8 @@
         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
           {{ selectedIds.length }} siswa dipilih
         </p>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Aksi massal hanya berlaku untuk siswa yang sedang dipilih di halaman ini.</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Aksi massal hanya berlaku untuk siswa yang sedang dipilih
+          di halaman ini.</p>
       </div>
       <div class="flex flex-wrap gap-2">
         <button class="btn-secondary" @click="clearSelection">
@@ -89,26 +81,12 @@
       </div>
     </section>
 
-    <StudentTable
-      :students="students.items"
-      :show-selection="true"
-      :selected-ids="selectedIds"
-      :all-selected="allSelected"
-      :some-selected="someSelected"
-      @toggle-select="toggleSelect"
-      @toggle-select-all="toggleSelectAll"
-      @edit="openEdit"
-      @delete="remove"
-      @invite="openInvite"
-      @whatsapp="openWhatsapp"
-      @email="openEmail"
-    />
-    <StudentPagination
-      :pagination="students.pagination"
-      :limit-options="paginationLimitOptions"
-      @page-change="changePage"
-      @limit-change="changeLimit"
-    />
+    <StudentTable :students="students.items" :show-selection="true" :selected-ids="selectedIds"
+      :all-selected="allSelected" :some-selected="someSelected" @toggle-select="toggleSelect"
+      @toggle-select-all="toggleSelectAll" @edit="openEdit" @delete="remove" @invite="openInvite"
+      @whatsapp="openWhatsapp" @email="openEmail" />
+    <StudentPagination :pagination="students.pagination" :limit-options="paginationLimitOptions"
+      @page-change="changePage" @limit-change="changeLimit" />
     <StudentModal :open="modalOpen" :student="selected" :loading="saving" :error="error" @close="modalOpen = false"
       @save="save" />
   </main>
@@ -362,6 +340,7 @@ onMounted(() => loadStudents(students.pagination.page));
   overflow-x: auto;
   padding-bottom: 0.15rem;
 }
+
 .class-filter-chip {
   flex: 0 0 auto;
   border-radius: 9999px;
@@ -373,21 +352,25 @@ onMounted(() => loadStudents(students.pagination.page));
   font-weight: 700;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
+
 .class-filter-chip:hover {
   border-color: #c7d2fe;
   color: #4f46e5;
 }
+
 .class-filter-chip.active {
   border-color: #4f46e5;
   background: #eef2ff;
   color: #4338ca;
   box-shadow: 0 8px 18px -14px rgba(79, 70, 229, 0.65);
 }
+
 .dark .class-filter-chip {
   border-color: #334155;
   background: #0f172a;
   color: #94a3b8;
 }
+
 .dark .class-filter-chip.active {
   border-color: #6366f1;
   background: rgba(79, 70, 229, 0.16);

@@ -1,6 +1,7 @@
 <template>
   <header
-    class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80"
+    ref="headerEl"
+    class="app-header sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80"
   >
     <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
       <!-- Left: mobile toggle + page title -->
@@ -77,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { fullscreen as handleFullscreen } from "@/helper/fullscreen";
@@ -95,6 +96,7 @@ const userProfile = ref({ full_name: "Administrator", role: "admin" });
 const menu = ref(false);
 const darkMode = ref(false);
 const fullscreenMode = ref(false);
+const headerEl = ref(null);
 
 const pageTitle = computed(() => {
   const raw = route.meta.title || "Dashboard";
@@ -129,6 +131,11 @@ const logout = async () => {
   router.push({ name: "Login" });
 };
 
+function syncHeaderHeight() {
+  const height = headerEl.value?.offsetHeight || 64;
+  document.documentElement.style.setProperty("--app-header-height", `${height}px`);
+}
+
 onMounted(() => {
   setTheme(localStorage.getItem("theme") === "dark");
 
@@ -138,5 +145,11 @@ onMounted(() => {
 
   const stored = localStorage.getItem("user");
   if (stored) userProfile.value = JSON.parse(stored);
+  nextTick(syncHeaderHeight);
+  window.addEventListener("resize", syncHeaderHeight, { passive: true });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", syncHeaderHeight);
 });
 </script>

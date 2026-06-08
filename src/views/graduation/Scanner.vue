@@ -1,6 +1,6 @@
 <template>
-  <main class="space-y-6 p-4 sm:p-6 dark:bg-black">
-    <div class="flex flex-wrap items-end justify-between gap-4">
+  <main class="scanner-page space-y-6 p-4 sm:p-6 dark:bg-black">
+    <div class="scanner-heading flex flex-wrap items-end justify-between gap-4">
       <div>
         <p class="page-eyebrow">Kehadiran</p>
         <h1 class="page-title">Scanner Absensi</h1>
@@ -13,9 +13,9 @@
       </div>
     </div>
 
-    <div class="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
-      <section class="card overflow-hidden">
-        <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-700/60">
+    <div class="scanner-layout grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
+      <section class="scanner-card card overflow-hidden">
+        <div class="scanner-card-header flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-700/60">
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center text-slate-400">
               <Icon icon="ph:qr-code-bold" class="text-xl" />
@@ -26,12 +26,12 @@
             </div>
           </div>
         </div>
-        <div class="p-4 sm:p-5">
+        <div class="scanner-card-body p-4 sm:p-5">
           <QRScanner @scan="scan" />
         </div>
       </section>
 
-      <aside class="space-y-5">
+      <aside class="scanner-side space-y-5">
         <AttendanceResult :result="attendance.lastScan" :error="attendance.error" />
 
         <section class="card p-5">
@@ -107,3 +107,40 @@ async function scan(payload) {
 }
 onMounted(() => attendance.fetchSummary());
 </script>
+
+<style scoped>
+@media (max-width: 767px) {
+  .scanner-page {
+    height: calc(100dvh - var(--app-header-height, 64px));
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #020617;
+  }
+
+  .scanner-heading,
+  .scanner-card-header,
+  .scanner-side {
+    display: none;
+  }
+
+  .scanner-layout,
+  .scanner-card,
+  .scanner-card-body {
+    display: block;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .scanner-card {
+    border: 0;
+    border-radius: 0;
+    background: #020617;
+    box-shadow: none;
+  }
+
+  .scanner-card-body {
+    padding: 0;
+  }
+}
+</style>

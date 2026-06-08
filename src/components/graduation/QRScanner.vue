@@ -1,10 +1,10 @@
 <template>
-  <div class="space-y-4">
-    <div class="relative min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 dark:border-slate-700">
-      <div id="qr-reader" class="min-h-[360px]"></div>
+  <div class="scanner-shell space-y-4">
+    <div class="scanner-viewport relative min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 dark:border-slate-700">
+      <div id="qr-reader" class="scanner-reader min-h-[360px]"></div>
       <div
         v-show="!active"
-        class="absolute inset-0 flex min-h-[360px] flex-col items-center justify-center gap-3 bg-slate-50 px-4 py-14 text-center dark:bg-slate-900/60"
+        class="scanner-idle absolute inset-0 flex min-h-[360px] flex-col items-center justify-center gap-3 bg-slate-50 px-4 py-14 text-center dark:bg-slate-900/60"
       >
         <span class="flex h-16 w-16 items-center justify-center text-slate-400">
           <Icon icon="ph:qr-code-bold" class="text-4xl" />
@@ -16,7 +16,7 @@
       </div>
     </div>
 
-    <div class="grid gap-2 sm:grid-cols-2">
+    <div class="scanner-controls grid gap-2 sm:grid-cols-2">
       <button class="btn-primary w-full" @click="start" :disabled="active">
         <Icon icon="ph:play-bold" /> Mulai Scan
       </button>
@@ -39,7 +39,19 @@ const active = ref(false);
 function start() {
   if (active.value) return;
   active.value = true;
-  scanner.value = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 260, height: 260 } }, false);
+  const mobile = window.matchMedia("(max-width: 767px)").matches;
+  scanner.value = new Html5QrcodeScanner(
+    "qr-reader",
+    {
+      fps: 12,
+      qrbox: mobile ? { width: 280, height: 280 } : { width: 260, height: 260 },
+      aspectRatio: mobile ? 9 / 16 : undefined,
+      videoConstraints: {
+        facingMode: { ideal: "environment" },
+      },
+    },
+    false
+  );
   try {
     scanner.value.render((decodedText) => {
       emit("scan", decodedText);
@@ -119,5 +131,73 @@ onBeforeUnmount(() => {
 :deep(#qr-reader a) {
   color: #64748b !important;
   font-size: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  .scanner-shell {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .scanner-viewport,
+  .scanner-reader,
+  .scanner-idle {
+    height: 100%;
+    min-height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .scanner-idle {
+    background: #020617;
+    color: #fff;
+  }
+
+  .scanner-controls {
+    position: absolute;
+    left: 0.875rem;
+    right: 0.875rem;
+    bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.625rem;
+    margin: 0;
+    padding: 0.625rem;
+    border-radius: 1rem;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .scanner-controls :deep(button) {
+    min-height: 44px;
+  }
+
+  :deep(#qr-reader) {
+    height: 100%;
+    min-height: 100%;
+    border: 0 !important;
+    background: #020617;
+  }
+
+  :deep(#qr-reader video) {
+    height: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover;
+  }
+
+  :deep(#qr-reader__scan_region) {
+    height: 100%;
+    min-height: 100% !important;
+  }
+
+  :deep(#qr-reader__scan_region img) {
+    display: none !important;
+  }
+
+  :deep(#qr-reader__dashboard) {
+    display: none !important;
+  }
 }
 </style>

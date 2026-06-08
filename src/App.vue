@@ -1,6 +1,6 @@
 <template>
   <!-- App -->
-  <div class="flex min-h-screen bg-slate-50 font-lexend text-slate-800 dark:bg-slate-950 dark:text-slate-200">
+  <div class="app-root flex min-h-screen bg-slate-50 font-lexend text-slate-800 dark:bg-slate-950 dark:text-slate-200">
     <!-- Mobile overlay -->
     <transition name="fade">
       <div
@@ -28,7 +28,7 @@
     </div>
 
     <div
-      class="flex flex-auto w-full flex-col overflow-auto h-screen bg-slate-50 transition-colors dark:bg-black"
+      class="app-scroll flex flex-auto w-full flex-col overflow-auto h-screen bg-slate-50 transition-colors dark:bg-black"
       id="body-scroll"
     >
       <Header
@@ -67,6 +67,7 @@
       return {
         sidebarDark: false,
         sidebar: false,
+        bodyScrollbar: null,
       };
     },
 
@@ -75,6 +76,22 @@
       Footer,
       Sidebar,
     },
+    watch: {
+      $route() {
+        this.sidebar = false;
+      },
+    },
+    mounted() {
+      this.initDesktopScrollbar();
+      window.addEventListener("resize", this.initDesktopScrollbar, { passive: true });
+    },
+    beforeUnmount() {
+      window.removeEventListener("resize", this.initDesktopScrollbar);
+      if (this.bodyScrollbar) {
+        this.bodyScrollbar.destroy();
+        this.bodyScrollbar = null;
+      }
+    },
     methods: {
       open() {
         this.sidebar = true;
@@ -82,14 +99,21 @@
       close() {
         this.sidebar = false;
       },
-    },
-    watch: {
-      $route() {
-        this.sidebar = false;
+      initDesktopScrollbar() {
+        const target = document.querySelector("#body-scroll");
+        if (!target) return;
+        const useNativeMobileScroll = !window.matchMedia("(min-width: 1024px) and (pointer: fine)").matches;
+        if (useNativeMobileScroll) {
+          if (this.bodyScrollbar) {
+            this.bodyScrollbar.destroy();
+            this.bodyScrollbar = null;
+          }
+          return;
+        }
+        if (!this.bodyScrollbar) {
+          this.bodyScrollbar = Scrollbar.init(target);
+        }
       },
-    },
-    mounted() {
-      Scrollbar.init(document.querySelector("#body-scroll"));
     },
   };
 </script>
