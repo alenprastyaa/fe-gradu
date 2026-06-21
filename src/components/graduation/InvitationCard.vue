@@ -254,7 +254,8 @@ const t = computed(() => ({
   venue_name: props.event.venue_name || "Aula Utama Sekolah",
   venue_address: props.event.venue_address || "Jl. Pendidikan No. 1",
   maps_url: props.event.maps_url || "",
-  dress_code: props.event.dress_code || "Formal rapi",
+  dress_code_student: props.event.dress_code_student || "Seragam sekolah / formal rapi",
+  dress_code_parent: props.event.dress_code_parent || "Batik / formal rapi",
   additional_note: props.event.additional_note || "Mohon hadir 30 menit sebelum acara dimulai dan tunjukkan QR Code kepada petugas registrasi.",
   schedule_title: props.event.schedule_title || "",
   schedule_headers: props.event.schedule_headers || "",
@@ -356,7 +357,8 @@ const infoItems = computed(() => [
   { icon: "ph:calendar-blank-bold", label: "Hari / Tanggal", value: t.value.event_date },
   { icon: "ph:clock-bold", label: "Waktu", value: t.value.event_time },
   { icon: "ph:buildings-bold", label: "Gedung / Venue", value: t.value.venue_name },
-  { icon: "ph:t-shirt-bold", label: "Dress Code", value: t.value.dress_code },
+  { icon: "ph:t-shirt-bold", label: "Dress Code Siswa", value: t.value.dress_code_student },
+  { icon: "ph:users-bold", label: "Dress Code Orang Tua", value: t.value.dress_code_parent },
 ]);
 
 const seatItems = computed(() => [

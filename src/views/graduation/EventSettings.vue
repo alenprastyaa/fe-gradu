@@ -398,8 +398,12 @@
               <input v-model="form.venue_name" class="input" placeholder="Aula Utama Sekolah" />
             </label>
             <label class="block">
-              <span class="label">Dress Code</span>
-              <input v-model="form.dress_code" class="input" placeholder="Formal rapi" />
+              <span class="label">Dress Code Siswa</span>
+              <input v-model="form.dress_code_student" class="input" placeholder="Seragam sekolah / formal rapi" />
+            </label>
+            <label class="block">
+              <span class="label">Dress Code Orang Tua</span>
+              <input v-model="form.dress_code_parent" class="input" placeholder="Batik / formal rapi" />
             </label>
             <div class="block md:col-span-2">
               <span class="label flex items-center gap-1.5">
@@ -597,7 +601,8 @@ const defaultForm = {
   venue_name: "Aula Utama Sekolah",
   venue_address: "Jl. Pendidikan No. 1",
   maps_url: "",
-  dress_code: "Formal rapi",
+  dress_code_student: "Seragam sekolah / formal rapi",
+  dress_code_parent: "Batik / formal rapi",
   additional_note: "Mohon hadir 30 menit sebelum acara dimulai dan tunjukkan QR Code kepada petugas registrasi.",
   schedule_title: defaultAgendaTitle,
   schedule_headers: JSON.stringify(defaultAgendaHeaders),
@@ -799,7 +804,8 @@ Hari/Tanggal: {{event_date}}
 Waktu: {{event_time}}
 Tempat: {{venue_name}}
 Alamat: {{venue_address}}
-Dress Code: {{dress_code}}
+Dress Code Siswa: {{dress_code_student}}
+Dress Code Orang Tua: {{dress_code_parent}}
 
 Data Undangan:
 Nama: {{student_name}}
@@ -895,6 +901,8 @@ const placeholders = [
   "{{venue_address}}",
   "{{maps_url}}",
   "{{dress_code}}",
+  "{{dress_code_student}}",
+  "{{dress_code_parent}}",
   "{{additional_note}}",
 ];
 
