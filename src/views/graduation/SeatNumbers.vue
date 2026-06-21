@@ -475,7 +475,20 @@ async function regenerate() {
     icon: "question",
   });
   if (!confirmed) return;
+  const previousLayout = cloneSeatLayout(seatLayout.value);
+  const previousCustomLayout = hasCustomSeatLayout.value;
   try {
+    if (canEditLayout.value && seatMapItems.value.length) {
+      ensureEditableLayout();
+      const nextLayout = createGroupedSeatLayout(seatLayout.value, classGroups.value);
+      seatLayout.value = nextLayout;
+      const saved = await persistSeatLayout(nextLayout);
+      if (!saved) {
+        seatLayout.value = previousLayout;
+        hasCustomSeatLayout.value = previousCustomLayout;
+        return;
+      }
+    }
     await students.regenerateSeats();
     await Promise.all([
       students.fetchStudents({ ...filters, page: 1, limit: students.pagination.limit }),
@@ -673,11 +686,6 @@ function studentGroupName(student) {
   return String(student?.major || "").trim() || "Tanpa Jurusan";
 }
 
-function extractSeatStart(value) {
-  const match = String(value || "").match(/\d+/);
-  return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
-}
-
 function buildGroupSeatKeyMap() {
   const grouped = new Map();
 
@@ -691,13 +699,14 @@ function buildGroupSeatKeyMap() {
 
   for (const [groupName, students] of grouped.entries()) {
     students.sort((a, b) => {
-      const classDiff = String(a.class_name || "Tanpa Kelas").localeCompare(String(b.class_name || "Tanpa Kelas"));
+      const classDiff = String(a.class_name || "Tanpa Kelas").localeCompare(String(b.class_name || "Tanpa Kelas"), "id", {
+        numeric: true,
+        sensitivity: "base",
+      });
       if (classDiff !== 0) return classDiff;
-      const seatDiff =
-        extractSeatStart(a.student_seat_number || a.companion_seat_number) -
-        extractSeatStart(b.student_seat_number || b.companion_seat_number);
-      if (seatDiff !== 0) return seatDiff;
-      return String(a.name || "").localeCompare(String(b.name || ""));
+      const nameDiff = String(a.name || "").trim().localeCompare(String(b.name || "").trim(), "id", { sensitivity: "base" });
+      if (nameDiff !== 0) return nameDiff;
+      return String(a.id).localeCompare(String(b.id));
     });
 
     const keys = [];
@@ -767,6 +776,14 @@ function groupSeatPairsByClass(layout) {
   return { groupedClasses, classIndexMap, emptySlotCount, orderedPairs };
 }
 
+function createGroupedSeatLayout(layout, groupOrder) {
+  const groupSeatKeyMap = buildGroupSeatKeyMap();
+  const orderedKeys = groupOrder.flatMap((groupName) => groupSeatKeyMap.get(groupName) || []);
+  const emptySlotCount = flattenSeatLayout(layout).filter((entry) => !normalizeSeatKey(entry)).length;
+  const extraEmptyRows = Math.floor(emptySlotCount / seatColumns.value);
+  return createSeatLayoutFromOrderedKeys(orderedKeys, seatColumns.value, extraEmptyRows);
+}
+
 function reorderClassBlocksInLayout(layout, sourceClass, targetClass) {
   const currentGroups = [...classGroups.value];
   if (!currentGroups.length) {
@@ -784,13 +801,9 @@ function reorderClassBlocksInLayout(layout, sourceClass, targetClass) {
 
   const nextGroups = [...currentGroups];
   [nextGroups[sourceIndex], nextGroups[targetIndex]] = [nextGroups[targetIndex], nextGroups[sourceIndex]];
-  const groupSeatKeyMap = buildGroupSeatKeyMap();
-  const orderedKeys = nextGroups.flatMap((groupName) => groupSeatKeyMap.get(groupName) || []);
-  const emptySlotCount = flattenSeatLayout(layout).filter((entry) => !normalizeSeatKey(entry)).length;
-  const extraEmptyRows = Math.floor(emptySlotCount / seatColumns.value);
 
   return {
-    layout: createSeatLayoutFromOrderedKeys(orderedKeys, seatColumns.value, extraEmptyRows),
+    layout: createGroupedSeatLayout(layout, nextGroups),
     changed: true,
     reason: "",
   };
