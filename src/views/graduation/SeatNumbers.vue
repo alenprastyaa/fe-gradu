@@ -84,24 +84,33 @@
           <template v-if="seatColorMode === 'class'">
             <button
               v-for="item in classLegend"
-              :key="item.className"
+              :key="item.groupName"
               type="button"
               class="class-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 ring-1"
               :class="{
                 'is-draggable': canEditLayout,
-                'is-drop-target': classDragTarget === item.className,
-                'is-dragging': draggingClassName === item.className,
+                'is-drop-target': classDragTarget === item.groupName,
+                'is-dragging': draggingClassName === item.groupName,
               }"
               :style="{ backgroundColor: item.color.soft, color: item.color.text, borderColor: item.color.border, '--tw-ring-color': item.color.border }"
               :draggable="canEditLayout"
-              :title="canEditLayout ? `Drag ${item.className} untuk pindah urutan rombongan` : item.className"
-              @dragstart="onClassDragStart(item.className)"
-              @dragover.prevent="onClassDragOver(item.className)"
-              @drop.prevent="onClassDrop(item.className)"
+              :title="canEditLayout ? `Drag ${item.groupName} untuk pindah urutan jurusan` : item.groupName"
+              @dragstart="onClassDragStart(item.groupName)"
+              @dragover.prevent="onClassDragOver(item.groupName)"
+              @drop.prevent="onClassDrop(item.groupName)"
               @dragend="onClassDragEnd"
             >
               <span class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: item.color.solid }"></span>
-              {{ item.className }}
+              <span>{{ item.groupName }}</span>
+              <span v-if="item.classes.length" class="class-chip-legend">
+                <span
+                  v-for="classItem in item.classes"
+                  :key="`${item.groupName}-${classItem.className}`"
+                  class="class-chip-legend-dot"
+                  :style="{ backgroundColor: classItem.color.solid }"
+                  :title="classItem.className"
+                ></span>
+              </span>
             </button>
           </template>
           <span v-if="!canEditLayout" class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20">
@@ -112,37 +121,22 @@
       </div>
 
       <div class="border-b border-slate-200/70 px-4 py-4 dark:border-slate-700/70 sm:px-5">
-        <div class="flex flex-wrap items-end gap-3">
-          <div class="min-w-[220px] flex-1">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Tukar Rombongan</p>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Urutan Rombongan</p>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Pilih dua rombongan kelas untuk menukar urutan blok bangku mereka pada layout.
+              Drag chip jurusan ke posisi yang diinginkan. Siswa dalam jurusan yang sama akan dijaga tetap satu kelompok.
             </p>
           </div>
-          <select v-model="classSwap.from" class="input !h-10 !w-auto min-w-[180px]" :disabled="!canSwapClassGroups">
-            <option value="">Pilih rombongan 1</option>
-            <option v-for="item in swappableClasses" :key="`from-${item}`" :value="item">{{ item }}</option>
-          </select>
-          <button
-            type="button"
-            class="btn-secondary !h-10 !px-3"
-            :disabled="!canSwapClassGroups || !classSwap.from || !classSwap.to"
-            @click="swapClassSelections"
-            title="Tukar pilihan rombongan"
+          <span
+            class="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20"
           >
-            <Icon icon="ph:arrows-left-right-bold" />
-          </button>
-          <select v-model="classSwap.to" class="input !h-10 !w-auto min-w-[180px]" :disabled="!canSwapClassGroups">
-            <option value="">Pilih rombongan 2</option>
-            <option v-for="item in availableSwapTargets" :key="`to-${item}`" :value="item">{{ item }}</option>
-          </select>
-          <button class="btn-primary !h-10 !px-4" :disabled="!canSubmitClassSwap" @click="swapClassGroups">
-            <Icon icon="ph:shuffle-angular-bold" />
-            Tukar Rombongan
-          </button>
+            <Icon icon="ph:hand-grabbing-bold" />
+            Geser chip untuk atur urutan jurusan
+          </span>
         </div>
         <p v-if="!canEditLayout" class="mt-2 text-xs font-medium text-amber-600 dark:text-amber-300">
-          Tukar rombongan hanya aktif saat filter kelas, jurusan, pencarian, dan status absensi kosong.
+          Pengaturan urutan jurusan aktif saat filter kelas, jurusan, pencarian, dan status absensi kosong.
         </p>
       </div>
 
@@ -294,11 +288,18 @@ const seatLayout = ref([]);
 const hasCustomSeatLayout = ref(false);
 const draggingSeat = ref(null);
 const dropTarget = ref(null);
-const classSwap = reactive({ from: "", to: "" });
 const draggingClassName = ref("");
 const classDragTarget = ref("");
 const attendanceDrafts = reactive({});
 const attendanceSavingId = ref("");
+const classColorMap = computed(() => {
+  const classNames = [...new Set(
+    seatMapItems.value
+      .map((student) => String(student.class_name || "").trim())
+      .filter(Boolean),
+  )].sort((a, b) => a.localeCompare(b));
+  return new Map(classNames.map((className, index) => [className, classPalette[index % classPalette.length]]));
+});
 
 function clampSeatColumns(value) {
   return Math.min(40, Math.max(4, Number(value) || 20));
@@ -369,6 +370,8 @@ function normalizeSeatColorMode(mode) {
 
 function colorForClass(className) {
   const key = String(className || "Tanpa Kelas");
+  const assignedColor = classColorMap.value.get(key);
+  if (assignedColor) return assignedColor;
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
     hash = (hash + key.charCodeAt(index) * (index + 1)) % 9973;
@@ -393,11 +396,7 @@ function seatTileStyle(seat) {
 
 const seatRows = computed(() => {
   const defaultLayout = createDefaultSeatLayout(seatTileMap.value, seatColumns.value);
-  const keys = Array.from(seatTileMap.value.keys());
-  const layout =
-    hasCustomSeatLayout.value && !isLegacyFullRowLayout(seatLayout.value, keys, seatColumns.value)
-      ? seatLayout.value
-      : defaultLayout;
+  const layout = hasCustomSeatLayout.value ? seatLayout.value : defaultLayout;
   return layout.map((row) =>
     row.map((key) => {
       if (!key) return null;
@@ -407,25 +406,35 @@ const seatRows = computed(() => {
 });
 const activeSeatLayout = computed(() => {
   const defaultLayout = createDefaultSeatLayout(seatTileMap.value, seatColumns.value);
-  const keys = Array.from(seatTileMap.value.keys());
-  return hasCustomSeatLayout.value && !isLegacyFullRowLayout(seatLayout.value, keys, seatColumns.value) ? seatLayout.value : defaultLayout;
+  return hasCustomSeatLayout.value ? seatLayout.value : defaultLayout;
 });
 const classGroups = computed(() => {
+  const allGroups = [...new Set(seatMapItems.value.map((student) => studentGroupName(student)))].sort((a, b) => a.localeCompare(b));
   const { groupedClasses } = groupSeatPairsByClass(activeSeatLayout.value);
   if (groupedClasses.length) {
-    return groupedClasses.map((group) => group.className);
+    const layoutGroups = groupedClasses.map((group) => group.className);
+    return [...layoutGroups, ...allGroups.filter((groupName) => !layoutGroups.includes(groupName))];
   }
-  return [...new Set(seatMapItems.value.map((student) => String(student.class_name || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  return allGroups;
 });
-const classLegend = computed(() => classGroups.value.map((className) => ({ className, color: colorForClass(className) })));
-const swappableClasses = computed(() => {
-  return [...classGroups.value];
-});
-const availableSwapTargets = computed(() => swappableClasses.value.filter((item) => item !== classSwap.from));
-const canSwapClassGroups = computed(() => canEditLayout.value && swappableClasses.value.length >= 2);
-const canSubmitClassSwap = computed(() => {
-  return canSwapClassGroups.value && classSwap.from && classSwap.to && classSwap.from !== classSwap.to;
-});
+const classLegend = computed(() =>
+  classGroups.value.map((groupName) => {
+    const classes = [...new Set(
+      seatMapItems.value
+        .filter((student) => studentGroupName(student) === groupName)
+        .map((student) => String(student.class_name || "").trim())
+        .filter(Boolean),
+    )]
+      .sort((a, b) => a.localeCompare(b))
+      .map((className) => ({ className, color: colorForClass(className) }));
+
+    return {
+      groupName,
+      color: colorForClass(groupName),
+      classes,
+    };
+  }),
+);
 
 async function fetchSeatMap() {
   try {
@@ -510,6 +519,7 @@ function buildSeatTileMap(items) {
     const base = {
       name: student.name,
       className: student.class_name || "Tanpa Kelas",
+      groupName: student.major || "Tanpa Jurusan",
       attended,
       pairId,
     };
@@ -549,26 +559,6 @@ function createDefaultSeatLayout(itemsMap, columns) {
   return rows;
 }
 
-function createFullRowSeatLayout(keys, columns) {
-  const rows = [];
-  for (let index = 0; index < keys.length; index += columns) {
-    const row = keys.slice(index, index + columns);
-    while (row.length < columns) row.push(null);
-    rows.push(row);
-  }
-  return rows;
-}
-
-function isLegacyFullRowLayout(layout, keys, columns) {
-  if (!Array.isArray(layout) || !layout.length || !keys.length) return false;
-  const legacy = createFullRowSeatLayout(keys, columns);
-  if (layout.length !== legacy.length) return false;
-  return legacy.every((legacyRow, rowIndex) => {
-    const row = Array.isArray(layout[rowIndex]) ? layout[rowIndex] : [];
-    return legacyRow.every((legacyKey, columnIndex) => (row[columnIndex] || null) === legacyKey);
-  });
-}
-
 function parseSeatLayout(layout) {
   if (Array.isArray(layout)) return layout;
   if (typeof layout !== "string" || !layout.trim()) return [];
@@ -600,6 +590,38 @@ function flattenSeatLayout(layout) {
   });
 }
 
+function flattenSeatLayoutBySection(layout) {
+  const rows = Array.isArray(layout) ? layout : [];
+  if (!rows.length) return [];
+
+  const normalizedRows = rows.map((row) => {
+    if (!Array.isArray(row)) {
+      return Array(seatColumns.value).fill(null);
+    }
+    const next = row.slice(0, seatColumns.value);
+    while (next.length < seatColumns.value) next.push(null);
+    return next;
+  });
+
+  const leftColumns = leftSeatColumns.value;
+  const rightColumns = seatColumns.value - leftColumns;
+  const ordered = [];
+
+  for (let rowIndex = 0; rowIndex < normalizedRows.length; rowIndex += 1) {
+    for (let columnIndex = 0; columnIndex < leftColumns; columnIndex += 1) {
+      ordered.push(normalizedRows[rowIndex][columnIndex] || null);
+    }
+  }
+
+  for (let rowIndex = 0; rowIndex < normalizedRows.length; rowIndex += 1) {
+    for (let columnIndex = 0; columnIndex < rightColumns; columnIndex += 1) {
+      ordered.push(normalizedRows[rowIndex][leftColumns + columnIndex] || null);
+    }
+  }
+
+  return ordered;
+}
+
 function chunkSeatLayout(linear) {
   const rows = [];
   const source = Array.isArray(linear) ? linear : [];
@@ -620,17 +642,20 @@ function createSeatLayoutFromOrderedKeys(keys, columns, extraEmptyRows = 0) {
   }
 
   const rowCount = Math.ceil(sourceKeys.length / columns);
+  const rows = Array.from({ length: rowCount }, () => Array(columns).fill(null));
   const leftCapacity = rowCount * leftColumns;
   const leftKeys = sourceKeys.slice(0, leftCapacity);
   const rightKeys = sourceKeys.slice(leftCapacity);
-  const rows = [];
 
   for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
-    const left = leftKeys.slice(rowIndex * leftColumns, rowIndex * leftColumns + leftColumns);
-    const right = rightKeys.slice(rowIndex * rightColumns, rowIndex * rightColumns + rightColumns);
-    while (left.length < leftColumns) left.push(null);
-    while (right.length < rightColumns) right.push(null);
-    rows.push([...left, ...right]);
+    const leftRow = leftKeys.slice(rowIndex * leftColumns, (rowIndex + 1) * leftColumns);
+    const rightRow = rightKeys.slice(rowIndex * rightColumns, (rowIndex + 1) * rightColumns);
+    leftRow.forEach((key, columnIndex) => {
+      rows[rowIndex][columnIndex] = key;
+    });
+    rightRow.forEach((key, columnIndex) => {
+      rows[rowIndex][leftColumns + columnIndex] = key;
+    });
   }
 
   for (let index = 0; index < extraEmptyRows; index += 1) {
@@ -644,8 +669,50 @@ function normalizeSeatKey(key) {
   return typeof key === "string" ? key.trim() : "";
 }
 
+function studentGroupName(student) {
+  return String(student?.major || "").trim() || "Tanpa Jurusan";
+}
+
+function extractSeatStart(value) {
+  const match = String(value || "").match(/\d+/);
+  return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
+}
+
+function buildGroupSeatKeyMap() {
+  const grouped = new Map();
+
+  for (const student of seatMapItems.value || []) {
+    const groupName = studentGroupName(student);
+    if (!grouped.has(groupName)) {
+      grouped.set(groupName, []);
+    }
+    grouped.get(groupName).push(student);
+  }
+
+  for (const [groupName, students] of grouped.entries()) {
+    students.sort((a, b) => {
+      const classDiff = String(a.class_name || "Tanpa Kelas").localeCompare(String(b.class_name || "Tanpa Kelas"));
+      if (classDiff !== 0) return classDiff;
+      const seatDiff =
+        extractSeatStart(a.student_seat_number || a.companion_seat_number) -
+        extractSeatStart(b.student_seat_number || b.companion_seat_number);
+      if (seatDiff !== 0) return seatDiff;
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+
+    const keys = [];
+    for (const student of students) {
+      const pairId = String(student.id);
+      keys.push(`${pairId}-student`, `${pairId}-companion`);
+    }
+    grouped.set(groupName, keys);
+  }
+
+  return grouped;
+}
+
 function buildOrderedSeatPairs(layout) {
-  const linear = flattenSeatLayout(layout);
+  const linear = flattenSeatLayoutBySection(layout);
   const orderedPairs = [];
   const pairMap = new Map();
 
@@ -658,7 +725,7 @@ function buildOrderedSeatPairs(layout) {
       const tile = seatTileMap.value.get(key) || seatTileMap.value.get(`${pairId}-student`) || seatTileMap.value.get(`${pairId}-companion`);
       const pair = {
         pairId,
-        className: tile?.className || "Tanpa Kelas",
+        className: tile?.groupName || "Tanpa Jurusan",
         keys: [],
       };
       pairMap.set(pairId, pair);
@@ -700,54 +767,28 @@ function groupSeatPairsByClass(layout) {
   return { groupedClasses, classIndexMap, emptySlotCount, orderedPairs };
 }
 
-function swapClassBlocksInLayout(layout, firstClass, secondClass) {
-  const { orderedPairs, groupedClasses, classIndexMap, emptySlotCount } = groupSeatPairsByClass(layout);
-  if (!orderedPairs.length) {
-    return { layout, changed: false, reason: "Belum ada pasangan bangku pada layout." };
-  }
-
-  const firstIndex = classIndexMap.get(firstClass);
-  const secondIndex = classIndexMap.get(secondClass);
-  if (firstIndex === undefined || secondIndex === undefined) {
-    return { layout, changed: false, reason: "Rombongan kelas tidak ditemukan pada layout saat ini." };
-  }
-  if (firstIndex === secondIndex) {
-    return { layout, changed: false, reason: "Pilih dua rombongan kelas yang berbeda." };
-  }
-
-  [groupedClasses[firstIndex], groupedClasses[secondIndex]] = [groupedClasses[secondIndex], groupedClasses[firstIndex]];
-
-  const orderedKeys = groupedClasses.flatMap((group) => group.pairs.flatMap((pair) => pair.keys));
-  const extraEmptyRows = Math.floor(emptySlotCount / seatColumns.value);
-  return {
-    layout: createSeatLayoutFromOrderedKeys(orderedKeys, seatColumns.value, extraEmptyRows),
-    changed: true,
-    reason: "",
-  };
-}
-
 function reorderClassBlocksInLayout(layout, sourceClass, targetClass) {
-  const { orderedPairs, groupedClasses, classIndexMap, emptySlotCount } = groupSeatPairsByClass(layout);
-  if (!orderedPairs.length) {
+  const currentGroups = [...classGroups.value];
+  if (!currentGroups.length) {
     return { layout, changed: false, reason: "Belum ada pasangan bangku pada layout." };
   }
 
-  const sourceIndex = classIndexMap.get(sourceClass);
-  const targetIndex = classIndexMap.get(targetClass);
-  if (sourceIndex === undefined || targetIndex === undefined) {
+  const sourceIndex = currentGroups.indexOf(sourceClass);
+  const targetIndex = currentGroups.indexOf(targetClass);
+  if (sourceIndex === -1 || targetIndex === -1) {
     return { layout, changed: false, reason: "Rombongan kelas tidak ditemukan pada layout saat ini." };
   }
-  if (sourceIndex === targetIndex) {
+  if (sourceClass === targetClass) {
     return { layout, changed: false, reason: "" };
   }
 
-  const nextGroups = [...groupedClasses];
-  const [movedGroup] = nextGroups.splice(sourceIndex, 1);
-  const insertionIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
-  nextGroups.splice(insertionIndex, 0, movedGroup);
-
-  const orderedKeys = nextGroups.flatMap((group) => group.pairs.flatMap((pair) => pair.keys));
+  const nextGroups = [...currentGroups];
+  [nextGroups[sourceIndex], nextGroups[targetIndex]] = [nextGroups[targetIndex], nextGroups[sourceIndex]];
+  const groupSeatKeyMap = buildGroupSeatKeyMap();
+  const orderedKeys = nextGroups.flatMap((groupName) => groupSeatKeyMap.get(groupName) || []);
+  const emptySlotCount = flattenSeatLayout(layout).filter((entry) => !normalizeSeatKey(entry)).length;
   const extraEmptyRows = Math.floor(emptySlotCount / seatColumns.value);
+
   return {
     layout: createSeatLayoutFromOrderedKeys(orderedKeys, seatColumns.value, extraEmptyRows),
     changed: true,
@@ -829,12 +870,6 @@ function ensureEditableLayout() {
   if (hasCustomSeatLayout.value) return;
   seatLayout.value = createDefaultSeatLayout(seatTileMap.value, seatColumns.value);
   hasCustomSeatLayout.value = true;
-}
-
-function swapClassSelections() {
-  const previousFrom = classSwap.from;
-  classSwap.from = classSwap.to;
-  classSwap.to = previousFrom;
 }
 
 function onClassDragStart(className) {
@@ -976,24 +1011,6 @@ async function resetLayout() {
   }
 }
 
-async function swapClassGroups() {
-  if (!canSubmitClassSwap.value) return;
-  ensureEditableLayout();
-  const previousLayout = cloneSeatLayout(seatLayout.value);
-  const { layout: nextLayout, changed, reason } = swapClassBlocksInLayout(seatLayout.value, classSwap.from, classSwap.to);
-  if (!changed) {
-    if (reason) {
-      toast.error(reason);
-    }
-    return;
-  }
-  seatLayout.value = nextLayout;
-  const saved = await persistSeatLayout(nextLayout, `Rombongan ${classSwap.from} dan ${classSwap.to} berhasil ditukar.`);
-  if (!saved) {
-    seatLayout.value = previousLayout;
-  }
-}
-
 onMounted(() => {
   loadSeatMapSettings();
   students.fetchStudents({ ...filters, page: 1, limit: 20 });
@@ -1128,6 +1145,18 @@ onMounted(() => {
 }
 .class-chip.is-drop-target {
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35), 0 10px 24px -18px rgba(15, 23, 42, 0.75);
+}
+.class-chip-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  margin-left: 0.15rem;
+}
+.class-chip-legend-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 .dark .seat-mode-control button {
   color: #94a3b8;
