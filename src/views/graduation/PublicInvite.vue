@@ -30,7 +30,12 @@
           <Icon v-else icon="ph:graduation-cap-fill" class="text-4xl" :style="{ color: accent }" />
         </div>
           <p class="text-[11px] font-semibold uppercase tracking-[0.34em]" :style="{ color: accent }">{{ event.school_name || "Graduation" }}</p>
-          <h1 class="mt-4 text-3xl font-bold leading-tight sm:text-4xl">{{ event.event_title || "Graduation Ceremony" }}</h1>
+          <div class="mt-4 space-y-2">
+            <h1 class="text-3xl font-bold leading-tight sm:text-4xl">{{ event.event_title || "Graduation Ceremony" }}</h1>
+            <p v-if="event.event_title_second" class="text-sm font-semibold uppercase tracking-[0.22em] text-white/75 sm:text-base">
+              {{ event.event_title_second }}
+            </p>
+          </div>
           <div class="mx-auto my-6 h-px w-16" :style="{ backgroundColor: rgba(accent, 0.6) }"></div>
 
           <p class="text-xs uppercase tracking-[0.2em] text-white/60">{{ event.recipient_greeting || "Kepada Yth." }}</p>

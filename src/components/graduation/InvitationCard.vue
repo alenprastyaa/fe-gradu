@@ -32,7 +32,12 @@
           <Icon v-else icon="ph:graduation-cap-fill" class="text-3xl" />
         </div>
         <p class="text-[11px] font-semibold uppercase tracking-[0.32em]" :style="{ color: t.theme_accent }">{{ t.school_name }}</p>
-        <h1 class="mt-4 max-w-2xl text-3xl font-bold leading-tight text-white sm:text-[2.6rem]" :class="isModern ? '' : 'mx-auto'">{{ t.event_title }}</h1>
+        <div class="mt-4 max-w-2xl" :class="isModern ? '' : 'mx-auto'">
+          <h1 class="text-3xl font-bold leading-tight text-white sm:text-[2.6rem]">{{ t.event_title }}</h1>
+          <p v-if="t.event_title_second" class="mt-2 text-sm font-semibold uppercase tracking-[0.24em] text-white/75 sm:text-base">
+            {{ t.event_title_second }}
+          </p>
+        </div>
         <div class="mt-6 flex items-center gap-3" :class="isModern ? '' : 'mx-auto justify-center'">
           <span v-if="!isModern" class="h-px w-10" :style="{ backgroundColor: rgba(t.theme_accent, 0.6) }"></span>
           <span
@@ -223,7 +228,7 @@
     <!-- ===== Footer strip (fixed bottom) ===== -->
     <footer class="px-4 py-5 text-center sm:px-8" :style="{ backgroundColor: t.theme_primary }">
       <p class="text-xs font-medium tracking-wide" :style="{ color: rgba('#ffffff', 0.7) }">
-        {{ t.school_name }} · {{ t.event_title }} · {{ t.graduation_year }}
+        {{ [t.school_name, t.event_title, t.event_title_second, t.graduation_year].filter(Boolean).join(" · ") }}
       </p>
     </footer>
   </article>
@@ -245,6 +250,7 @@ const props = defineProps({
 
 const t = computed(() => ({
   event_title: props.event.event_title || "Graduation Ceremony",
+  event_title_second: props.event.event_title_second || "",
   school_name: props.event.school_name || "Nama Sekolah",
   graduation_year: props.event.graduation_year || "2026",
   recipient_greeting: props.event.recipient_greeting || "Yth. Siswa/i dan Orang Tua/Wali",

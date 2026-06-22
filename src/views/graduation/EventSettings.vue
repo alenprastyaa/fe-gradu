@@ -31,7 +31,7 @@
         <div class="flex items-start justify-between gap-3">
           <div>
             <p class="font-semibold text-slate-900 dark:text-white">{{ template.template_name }}</p>
-            <p class="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{{ template.event_title }}</p>
+            <p class="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{{ [template.event_title, template.event_title_second].filter(Boolean).join(" · ") }}</p>
             <p v-if="template.audio_url" class="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-300">
               <Icon icon="ph:music-notes-bold" /> MP3 aktif
             </p>
@@ -97,6 +97,19 @@
               <span class="label">Judul Acara</span>
               <input v-model="form.event_title" class="input" placeholder="Graduation Ceremony 2026" />
             </label>
+          </div>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="block">
+              <span class="label">Judul 2</span>
+              <input v-model="form.event_title_second" class="input" placeholder="Veraviuz" />
+            </label>
+            <div class="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              Contoh:
+              <br />
+              Judul 1: acara pelesan
+              <br />
+              Judul 2: Veraviuz
+            </div>
           </div>
         </div>
 
@@ -478,6 +491,9 @@
                   <p class="text-[9px] font-semibold uppercase tracking-[0.2em]" :style="{ color: form.theme_accent }">
                     {{ form.school_name }}</p>
                   <p class="mt-1 text-sm font-bold leading-tight text-white">{{ form.event_title }}</p>
+                  <p v-if="form.event_title_second" class="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                    {{ form.event_title_second }}
+                  </p>
                   <span class="mt-2 inline-block rounded-full border px-2 py-0.5 text-[9px] font-semibold"
                     :style="{ borderColor: rgba(form.theme_accent, 0.5), color: form.theme_accent }">
                     Tahun {{ form.graduation_year }}
@@ -592,6 +608,7 @@ const defaultForm = {
   template_name: "Formal Navy Gold",
   is_active: false,
   event_title: "Graduation Ceremony 2026",
+  event_title_second: "",
   school_name: "Nama Sekolah",
   graduation_year: "2026",
   recipient_greeting: "Yth. Siswa/i dan Orang Tua/Wali",
