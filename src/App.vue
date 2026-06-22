@@ -28,7 +28,8 @@
     </div>
 
     <div
-      class="app-scroll flex flex-auto w-full flex-col overflow-auto h-screen bg-slate-50 transition-colors dark:bg-black"
+      class="flex flex-auto w-full flex-col bg-slate-50 transition-colors dark:bg-black"
+      :class="scrollContainerClass"
       id="body-scroll"
     >
       <Header
@@ -76,17 +77,29 @@
       Footer,
       Sidebar,
     },
+    computed: {
+      isPublicRoute() {
+        return !!this.$route.meta.hideNav;
+      },
+      scrollContainerClass() {
+        return this.isPublicRoute ? "min-h-screen overflow-visible" : "app-scroll overflow-auto h-screen";
+      },
+    },
     watch: {
       $route() {
         this.sidebar = false;
+        this.syncBodyOverflow();
+        this.initDesktopScrollbar();
       },
     },
     mounted() {
+      this.syncBodyOverflow();
       this.initDesktopScrollbar();
       window.addEventListener("resize", this.initDesktopScrollbar, { passive: true });
     },
     beforeUnmount() {
       window.removeEventListener("resize", this.initDesktopScrollbar);
+      document.body.style.overflow = "";
       if (this.bodyScrollbar) {
         this.bodyScrollbar.destroy();
         this.bodyScrollbar = null;
@@ -99,9 +112,19 @@
       close() {
         this.sidebar = false;
       },
+      syncBodyOverflow() {
+        document.body.style.overflow = this.isPublicRoute ? "auto" : "hidden";
+      },
       initDesktopScrollbar() {
         const target = document.querySelector("#body-scroll");
         if (!target) return;
+        if (this.isPublicRoute) {
+          if (this.bodyScrollbar) {
+            this.bodyScrollbar.destroy();
+            this.bodyScrollbar = null;
+          }
+          return;
+        }
         const useNativeMobileScroll = !window.matchMedia("(min-width: 1024px) and (pointer: fine)").matches;
         if (useNativeMobileScroll) {
           if (this.bodyScrollbar) {
