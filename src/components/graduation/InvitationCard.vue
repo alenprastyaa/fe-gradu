@@ -6,7 +6,7 @@
   >
     <!-- ===== Header (fixed top) ===== -->
     <header
-      class="relative overflow-hidden px-6 py-12 sm:px-10"
+      class="relative overflow-hidden px-4 py-10 sm:px-8 sm:py-12"
       :class="isModern ? 'text-left' : 'text-center'"
       :style="{ background: `linear-gradient(140deg, ${t.theme_primary} 0%, ${t.theme_secondary} 100%)` }"
     >
@@ -54,7 +54,7 @@
     ></audio>
 
     <!-- ===== Ordered sections (drag-and-drop order from CMS) ===== -->
-    <div class="space-y-8 px-6 py-10 sm:px-12">
+    <div class="space-y-8 px-4 py-8 sm:px-8 sm:py-10">
       <template v-for="(type, i) in orderedSections" :key="type">
         <!-- Recipient -->
         <section v-if="type === 'recipient'" v-reveal="{ delay: i * 80 }" :class="isModern ? 'text-left' : 'text-center'">
@@ -221,7 +221,7 @@
     </div>
 
     <!-- ===== Footer strip (fixed bottom) ===== -->
-    <footer class="px-6 py-5 text-center sm:px-12" :style="{ backgroundColor: t.theme_primary }">
+    <footer class="px-4 py-5 text-center sm:px-8" :style="{ backgroundColor: t.theme_primary }">
       <p class="text-xs font-medium tracking-wide" :style="{ color: rgba('#ffffff', 0.7) }">
         {{ t.school_name }} · {{ t.event_title }} · {{ t.graduation_year }}
       </p>

@@ -1,17 +1,18 @@
 <template>
-  <!-- App -->
-  <div class="app-root flex min-h-screen bg-slate-50 font-lexend text-slate-800 dark:bg-slate-950 dark:text-slate-200">
-    <!-- Mobile overlay -->
+  <router-view v-if="isPublicRoute" />
+  <div
+    v-else
+    class="app-root flex min-h-screen bg-slate-50 font-lexend text-slate-800 dark:bg-slate-950 dark:text-slate-200"
+  >
     <transition name="fade">
       <div
-        v-if="sidebar && !$route.meta.hideNav"
+        v-if="sidebar"
         class="fixed inset-0 z-20 bg-slate-900/50 backdrop-blur-sm lg:hidden"
         @click="close"
       ></div>
     </transition>
 
     <div
-      v-if="!$route.meta.hideNav"
       class="lg:block"
       :class="{ 'lg:block hidden': !sidebar, block: sidebar }"
     >
@@ -19,24 +20,16 @@
         class="lg:flex-auto w-sidebar bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 lg:z-0 z-30 overflow-auto lg:relative fixed"
       >
         <perfect-scrollbar class="h-screen">
-          <Sidebar
-            v-if="!$route.meta.hideNav"
-            @sidebarToggle="close"
-          />
+          <Sidebar @sidebarToggle="close" />
         </perfect-scrollbar>
       </div>
     </div>
 
     <div
-      class="flex flex-auto w-full flex-col bg-slate-50 transition-colors dark:bg-black"
-      :class="scrollContainerClass"
+      class="app-scroll flex flex-auto w-full flex-col overflow-auto h-screen bg-slate-50 transition-colors dark:bg-black"
       id="body-scroll"
     >
-      <Header
-        v-if="!$route.meta.hideNav"
-        class="shrink-0"
-        @sidebarToggle="open"
-      />
+      <Header class="shrink-0" @sidebarToggle="open" />
 
       <transition
         name="slide-up"
@@ -44,13 +37,9 @@
       >
         <router-view />
       </transition>
-      <Footer
-        v-if="!$route.meta.hideNav && !$route.meta.hideFooter"
-        class="mt-auto shrink-0"
-      />
+      <Footer v-if="!$route.meta.hideFooter" class="mt-auto shrink-0" />
     </div>
   </div>
-  <!-- End app -->
 </template>
 
 <script>
@@ -80,9 +69,6 @@
     computed: {
       isPublicRoute() {
         return !!this.$route.meta.hideNav;
-      },
-      scrollContainerClass() {
-        return this.isPublicRoute ? "min-h-screen overflow-visible" : "app-scroll overflow-auto h-screen";
       },
     },
     watch: {

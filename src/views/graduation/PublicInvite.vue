@@ -1,5 +1,5 @@
 <template>
-  <main class="relative min-h-screen overflow-x-hidden px-4 py-8 sm:py-12" :style="{ backgroundColor: bg }">
+  <main class="public-invite relative min-h-screen overflow-x-hidden px-2 py-6 sm:px-4 sm:py-12" :style="{ backgroundColor: bg }">
     <!-- decorative gradient blobs -->
     <span class="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full blur-3xl" :style="{ backgroundColor: rgba(accent, 0.18) }"></span>
     <span class="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full blur-3xl" :style="{ backgroundColor: rgba(primary, 0.4) }"></span>
@@ -108,6 +108,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.public-invite {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
+}
+
 /* cover fades & lifts away when opened */
 .cover-leave-active {
   transition: opacity 0.8s cubic-bezier(0.7, 0, 0.84, 0), transform 0.8s cubic-bezier(0.7, 0, 0.84, 0), filter 0.8s ease;
