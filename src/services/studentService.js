@@ -36,8 +36,8 @@ export const studentService = {
   exportData() {
     return api.get("/students/export", { responseType: "blob" });
   },
-  regenerateSeats() {
-    return api.post("/students/regenerate-seat-numbers");
+  regenerateSeats(payload = {}) {
+    return api.post("/students/regenerate-seat-numbers", payload);
   },
   resetAll() {
     return api.post("/students/reset-all");

@@ -40,7 +40,7 @@
 
           <p class="text-xs uppercase tracking-[0.2em] text-white/60">{{ event.recipient_greeting || "Kepada Yth." }}</p>
           <p class="mt-3 text-2xl font-bold">{{ student.name }}</p>
-          <p class="mt-1 text-sm text-white/60">{{ student.class_name }} · {{ student.major }}</p>
+          <p v-if="recipientMeta" class="mt-1 text-sm text-white/60">{{ recipientMeta }}</p>
 
           <button
             class="open-btn mt-9 inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-bold shadow-xl transition active:scale-95"
@@ -92,6 +92,13 @@ const bg = computed(() => event.value.theme_background || "#020617");
 const primary = computed(() => event.value.theme_primary || "#0f172a");
 const accent = computed(() => event.value.theme_accent || "#facc15");
 const accentText = computed(() => contrastOn(accent.value));
+const recipientMeta = computed(() => {
+  if (!student.value) return "";
+  if (student.value.invite_type === "teacher") {
+    return student.value.major || student.value.class_name || "Guru";
+  }
+  return [student.value.class_name, student.value.major].filter(Boolean).join(" · ");
+});
 
 async function open() {
   opened.value = true;

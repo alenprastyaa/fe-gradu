@@ -89,11 +89,12 @@
 
 <script setup>
 import { reactive, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/store/auth";
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
 const form = reactive({ email: "", password: "" });
 const showPassword = ref(false);
@@ -107,7 +108,8 @@ const features = [
 async function submit() {
   try {
     const data = await auth.login(form);
-    router.push(data.admin?.role === "super_admin" ? "/super/schools" : "/admin/dashboard");
+    const redirectPath = typeof route.query.redirect === "string" ? route.query.redirect : "";
+    router.push(redirectPath || (data.admin?.role === "super_admin" ? "/super/schools" : "/admin/dashboard"));
   } catch {
     /* error message handled by store (auth.error) */
   }

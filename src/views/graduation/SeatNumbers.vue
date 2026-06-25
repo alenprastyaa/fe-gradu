@@ -67,8 +67,24 @@
               @keydown.enter.prevent="saveSeatColumns"
             />
           </label>
+          <label class="seat-column-control">
+            <Icon icon="ph:rows-bold" />
+            <span>Baris</span>
+            <input
+              v-model="seatRowsInput"
+              type="number"
+              min="1"
+              max="200"
+              step="1"
+              @blur="saveSeatRows"
+              @keydown.enter.prevent="saveSeatRows"
+            />
+          </label>
           <button class="btn-secondary !px-3 !py-2 text-xs" :disabled="!canEditLayout" @click="addRowBelow">
             <Icon icon="ph:rows-plus-bottom-bold" /> Tambah Baris
+          </button>
+          <button class="btn-secondary !px-3 !py-2 text-xs" :disabled="!canRemoveRow" @click="removeLastRow">
+            <Icon icon="ph:rows-minus-bottom-bold" /> Kurangi Baris
           </button>
           <button class="btn-secondary !px-3 !py-2 text-xs" :disabled="!canEditLayout" @click="resetLayout">
             <Icon icon="ph:arrow-counter-clockwise-bold" /> Reset Layout
@@ -262,6 +278,7 @@ const filters = reactive({ search: "", class_name: "", major: "", attendance_sta
 const seatMapItems = ref([]);
 const seatColumns = ref(20);
 const seatColumnsInput = ref("20");
+const seatRowsInput = ref("1");
 const seatColorMode = ref("attendance");
 const leftSeatColumns = computed(() => Math.floor(seatColumns.value / 2));
 const seatBoardStyle = computed(() => ({
@@ -284,6 +301,21 @@ const classPalette = [
 const hasAnyFilter = computed(() => Object.values(filters).some((value) => String(value || "").trim() !== ""));
 const canEditLayout = computed(() => !hasAnyFilter.value);
 const seatTileMap = computed(() => buildSeatTileMap(seatMapItems.value));
+const canRemoveRow = computed(() => {
+  if (!canEditLayout.value || !hasCustomSeatLayout.value || !seatLayout.value.length) return false;
+  const lastRow = seatLayout.value[seatLayout.value.length - 1] || [];
+  return lastRow.every((entry) => !normalizeSeatKey(entry));
+});
+const minimumSeatRows = computed(() => {
+  const occupiedKeys = Array.from(seatTileMap.value.keys()).length;
+  return Math.max(1, Math.ceil(occupiedKeys / Math.max(1, seatColumns.value)));
+});
+const currentSeatRowCount = computed(() => {
+  if (hasCustomSeatLayout.value && seatLayout.value.length) {
+    return seatLayout.value.length;
+  }
+  return minimumSeatRows.value;
+});
 const seatLayout = ref([]);
 const hasCustomSeatLayout = ref(false);
 const draggingSeat = ref(null);
@@ -303,6 +335,10 @@ const classColorMap = computed(() => {
 
 function clampSeatColumns(value) {
   return Math.min(40, Math.max(4, Number(value) || 20));
+}
+
+function clampSeatRows(value) {
+  return Math.min(200, Math.max(minimumSeatRows.value, Number(value) || minimumSeatRows.value));
 }
 
 async function loadSeatMapSettings() {
@@ -342,6 +378,39 @@ async function saveSeatColumns() {
     seatLayout.value = previousCustomLayout ? previousLayout : seatLayout.value;
     seatColumnsInput.value = String(seatColumns.value);
     toast.error(apiMessage(err, "Gagal menyimpan setting denah bangku"));
+  }
+}
+
+async function saveSeatRows() {
+  if (!canEditLayout.value) {
+    seatRowsInput.value = String(currentSeatRowCount.value);
+    return;
+  }
+  const rawValue = String(seatRowsInput.value || "").trim();
+  if (rawValue === "") {
+    seatRowsInput.value = String(currentSeatRowCount.value);
+    return;
+  }
+  ensureEditableLayout();
+  const previousLayout = cloneSeatLayout(seatLayout.value);
+  const nextRowCount = clampSeatRows(rawValue);
+  const nextLayout = cloneSeatLayout(seatLayout.value);
+
+  while (nextLayout.length < nextRowCount) {
+    nextLayout.push(Array(seatColumns.value).fill(null));
+  }
+  while (nextLayout.length > nextRowCount) {
+    const lastRow = nextLayout[nextLayout.length - 1] || [];
+    if (lastRow.some((entry) => normalizeSeatKey(entry))) break;
+    nextLayout.pop();
+  }
+
+  seatLayout.value = nextLayout;
+  seatRowsInput.value = String(nextLayout.length || minimumSeatRows.value);
+  const saved = await persistSeatLayout(nextLayout, "Jumlah baris denah berhasil disimpan.");
+  if (!saved) {
+    seatLayout.value = previousLayout;
+    seatRowsInput.value = String(previousLayout.length || minimumSeatRows.value);
   }
 }
 
@@ -478,24 +547,30 @@ async function regenerate() {
   const previousLayout = cloneSeatLayout(seatLayout.value);
   const previousCustomLayout = hasCustomSeatLayout.value;
   try {
+    let nextLayoutForSave = hasCustomSeatLayout.value ? cloneSeatLayout(seatLayout.value) : [];
     if (canEditLayout.value && seatMapItems.value.length) {
       ensureEditableLayout();
-      const nextLayout = createGroupedSeatLayout(seatLayout.value, classGroups.value);
+      const nextLayout = createGroupedSeatLayout(seatLayout.value, classGroups.value, { preserveEmptyRows: false });
       seatLayout.value = nextLayout;
-      const saved = await persistSeatLayout(nextLayout);
-      if (!saved) {
-        seatLayout.value = previousLayout;
-        hasCustomSeatLayout.value = previousCustomLayout;
-        return;
-      }
+      nextLayoutForSave = cloneSeatLayout(nextLayout);
     }
-    await students.regenerateSeats();
+    await students.regenerateSeats({
+      seat_map_columns: seatColumns.value,
+      seat_map_color_mode: seatColorMode.value,
+      seat_map_layout: nextLayoutForSave.length ? JSON.stringify(nextLayoutForSave) : "",
+    });
+    if (nextLayoutForSave.length) {
+      hasCustomSeatLayout.value = true;
+    }
     await Promise.all([
       students.fetchStudents({ ...filters, page: 1, limit: students.pagination.limit }),
       fetchSeatMap(),
+      loadSeatMapSettings(),
     ]);
     toast.success("Nomor bangku berhasil disusun ulang.");
   } catch (err) {
+    seatLayout.value = previousLayout;
+    hasCustomSeatLayout.value = previousCustomLayout;
     toast.error(apiMessage(err, "Gagal regenerate nomor bangku"));
   }
 }
@@ -647,13 +722,12 @@ function chunkSeatLayout(linear) {
 }
 
 function createSeatLayoutFromOrderedKeys(keys, columns, extraEmptyRows = 0) {
-  const leftColumns = Math.floor(columns / 2);
-  const rightColumns = columns - leftColumns;
   const sourceKeys = Array.isArray(keys) ? keys.filter((key) => isSeatKey(key)) : [];
   if (!sourceKeys.length) {
     return Array.from({ length: extraEmptyRows }, () => Array(columns).fill(null));
   }
-
+  const leftColumns = Math.floor(columns / 2);
+  const rightColumns = columns - leftColumns;
   const rowCount = Math.ceil(sourceKeys.length / columns);
   const rows = Array.from({ length: rowCount }, () => Array(columns).fill(null));
   const leftCapacity = rowCount * leftColumns;
@@ -670,10 +744,64 @@ function createSeatLayoutFromOrderedKeys(keys, columns, extraEmptyRows = 0) {
       rows[rowIndex][leftColumns + columnIndex] = key;
     });
   }
-
   for (let index = 0; index < extraEmptyRows; index += 1) {
     rows.push(Array(columns).fill(null));
   }
+
+  return rows;
+}
+
+function splitGroupsAcrossSections(groupKeyGroups, columns) {
+  const normalizedGroups = (Array.isArray(groupKeyGroups) ? groupKeyGroups : [])
+    .map((groupKeys) => (Array.isArray(groupKeys) ? groupKeys.filter((key) => isSeatKey(key)) : []))
+    .filter((groupKeys) => groupKeys.length);
+
+  const leftColumns = Math.floor(columns / 2);
+  const totalKeys = normalizedGroups.reduce((sum, groupKeys) => sum + groupKeys.length, 0);
+  const targetLeftKeys = Math.floor((totalKeys * leftColumns) / columns);
+
+  let runningKeys = 0;
+  let splitIndex = 0;
+  for (let index = 0; index < normalizedGroups.length; index += 1) {
+    const nextSize = normalizedGroups[index].length;
+    if (index > 0 && runningKeys + nextSize > targetLeftKeys) break;
+    runningKeys += nextSize;
+    splitIndex = index + 1;
+  }
+
+  return {
+    leftGroups: normalizedGroups.slice(0, splitIndex),
+    rightGroups: normalizedGroups.slice(splitIndex),
+  };
+}
+
+function createSeatLayoutFromGroupedKeys(groupKeyGroups, columns, extraEmptyRows = 0) {
+  const { leftGroups, rightGroups } = splitGroupsAcrossSections(groupKeyGroups, columns);
+  const normalizedGroups = [...leftGroups, ...rightGroups];
+  if (!normalizedGroups.length) {
+    return Array.from({ length: extraEmptyRows }, () => Array(columns).fill(null));
+  }
+
+  const leftColumns = Math.floor(columns / 2);
+  const rightColumns = columns - leftColumns;
+  const leftKeys = leftGroups.flatMap((groupKeys) => groupKeys);
+  const rightKeys = rightGroups.flatMap((groupKeys) => groupKeys);
+  const leftRows = leftKeys.length ? Math.ceil(leftKeys.length / leftColumns) : 0;
+  const rightRows = rightKeys.length ? Math.ceil(rightKeys.length / rightColumns) : 0;
+  const rowCount = Math.max(leftRows, rightRows, 1);
+  const rows = Array.from({ length: rowCount + extraEmptyRows }, () => Array(columns).fill(null));
+
+  leftKeys.forEach((key, index) => {
+    const rowIndex = Math.floor(index / leftColumns);
+    const columnIndex = index % leftColumns;
+    rows[rowIndex][columnIndex] = key;
+  });
+
+  rightKeys.forEach((key, index) => {
+    const rowIndex = Math.floor(index / rightColumns);
+    const columnIndex = leftColumns + (index % rightColumns);
+    rows[rowIndex][columnIndex] = key;
+  });
 
   return rows;
 }
@@ -776,12 +904,20 @@ function groupSeatPairsByClass(layout) {
   return { groupedClasses, classIndexMap, emptySlotCount, orderedPairs };
 }
 
-function createGroupedSeatLayout(layout, groupOrder) {
-  const groupSeatKeyMap = buildGroupSeatKeyMap();
-  const orderedKeys = groupOrder.flatMap((groupName) => groupSeatKeyMap.get(groupName) || []);
-  const emptySlotCount = flattenSeatLayout(layout).filter((entry) => !normalizeSeatKey(entry)).length;
-  const extraEmptyRows = Math.floor(emptySlotCount / seatColumns.value);
-  return createSeatLayoutFromOrderedKeys(orderedKeys, seatColumns.value, extraEmptyRows);
+function createGroupedSeatLayout(layout, groupOrder, options = {}) {
+  const { groupedClasses } = groupSeatPairsByClass(layout);
+  const currentGroupSeatKeyMap = new Map(
+    groupedClasses.map((group) => [group.className, group.pairs.flatMap((pair) => pair.keys)]),
+  );
+  const fallbackGroupSeatKeyMap = buildGroupSeatKeyMap();
+  const orderedGroups = groupOrder
+    .map((groupName) => currentGroupSeatKeyMap.get(groupName) || fallbackGroupSeatKeyMap.get(groupName) || [])
+    .filter((groupKeys) => groupKeys.length);
+  const orderedKeys = orderedGroups.flatMap((groupKeys) => groupKeys);
+  const preserveEmptyRows = options.preserveEmptyRows !== false;
+  const emptySlotCount = preserveEmptyRows ? flattenSeatLayout(layout).filter((entry) => !normalizeSeatKey(entry)).length : 0;
+  const extraEmptyRows = preserveEmptyRows ? Math.floor(emptySlotCount / seatColumns.value) : 0;
+  return createSeatLayoutFromGroupedKeys(orderedGroups, seatColumns.value, extraEmptyRows);
 }
 
 function reorderClassBlocksInLayout(layout, sourceClass, targetClass) {
@@ -800,10 +936,12 @@ function reorderClassBlocksInLayout(layout, sourceClass, targetClass) {
   }
 
   const nextGroups = [...currentGroups];
-  [nextGroups[sourceIndex], nextGroups[targetIndex]] = [nextGroups[targetIndex], nextGroups[sourceIndex]];
+  const [movedGroup] = nextGroups.splice(sourceIndex, 1);
+  const insertionIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  nextGroups.splice(insertionIndex, 0, movedGroup);
 
   return {
-    layout: createGroupedSeatLayout(layout, nextGroups),
+    layout: createGroupedSeatLayout(layout, nextGroups, { preserveEmptyRows: false }),
     changed: true,
     reason: "",
   };
@@ -834,40 +972,31 @@ function reflowSeatLayout(layout, columns) {
   const rows = Array.isArray(layout) ? layout : [];
   if (!rows.length) return [];
 
-  const keys = [];
   const seen = new Set();
-  let trailingEmptyRows = 0;
+  const normalizedRows = rows.map((row) => {
+    const next = Array(columns).fill(null);
+    const source = Array.isArray(row) ? row : [];
+    const limit = Math.min(columns, source.length);
 
-  for (let index = rows.length - 1; index >= 0; index -= 1) {
-    const row = Array.isArray(rows[index]) ? rows[index] : [];
-    if (row.some((value) => isSeatKey(value))) break;
-    trailingEmptyRows += 1;
-  }
-
-  for (const row of rows) {
-    for (const value of Array.isArray(row) ? row : []) {
-      if (!isSeatKey(value)) continue;
-      const key = value.trim();
-      if (seen.has(key)) continue;
+    for (let index = 0; index < limit; index += 1) {
+      const key = normalizeSeatKey(source[index]);
+      if (!key || seen.has(key)) continue;
       seen.add(key);
-      keys.push(key);
+      next[index] = key;
     }
+
+    return next;
+  });
+
+  const lastOccupiedRow = normalizedRows.reduce((lastIndex, row, index) => (
+    row.some((value) => normalizeSeatKey(value)) ? index : lastIndex
+  ), -1);
+
+  if (lastOccupiedRow === -1) {
+    return [];
   }
 
-  if (keys.length === 0) {
-    return Array.from({ length: rows.length }, () => Array(columns).fill(null));
-  }
-
-  const next = [];
-  for (let index = 0; index < keys.length; index += columns) {
-    const row = keys.slice(index, index + columns);
-    while (row.length < columns) row.push(null);
-    next.push(row);
-  }
-  for (let index = 0; index < trailingEmptyRows; index += 1) {
-    next.push(Array(columns).fill(null));
-  }
-  return next;
+  return normalizedRows.slice(0, lastOccupiedRow + 1);
 }
 
 function applySeatMapPayload(payload) {
@@ -877,12 +1006,14 @@ function applySeatMapPayload(payload) {
   const parsedLayout = reflowSeatLayout(parseSeatLayout(payload?.seat_map_layout), seatColumns.value);
   hasCustomSeatLayout.value = parsedLayout.length > 0;
   seatLayout.value = hasCustomSeatLayout.value ? parsedLayout : [];
+  seatRowsInput.value = String(hasCustomSeatLayout.value ? seatLayout.value.length : minimumSeatRows.value);
 }
 
 function ensureEditableLayout() {
   if (hasCustomSeatLayout.value) return;
   seatLayout.value = createDefaultSeatLayout(seatTileMap.value, seatColumns.value);
   hasCustomSeatLayout.value = true;
+  seatRowsInput.value = String(seatLayout.value.length || minimumSeatRows.value);
 }
 
 function onClassDragStart(className) {
@@ -1002,6 +1133,20 @@ async function addRowBelow() {
   if (!saved) {
     seatLayout.value = previousLayout;
   }
+  seatRowsInput.value = String(seatLayout.value.length || minimumSeatRows.value);
+}
+
+async function removeLastRow() {
+  if (!canRemoveRow.value) return;
+  const previousLayout = cloneSeatLayout(seatLayout.value);
+  const nextLayout = cloneSeatLayout(seatLayout.value);
+  nextLayout.pop();
+  seatLayout.value = nextLayout;
+  const saved = await persistSeatLayout(nextLayout, "Baris kosong terakhir berhasil dihapus.");
+  if (!saved) {
+    seatLayout.value = previousLayout;
+  }
+  seatRowsInput.value = String(seatLayout.value.length || minimumSeatRows.value);
 }
 
 async function resetLayout() {

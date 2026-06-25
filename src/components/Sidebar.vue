@@ -82,6 +82,7 @@ const userAvatar = defaultAvatar;
 const schoolMenu = [
   { label: "Dashboard", icon: "ph:squares-four-bold", to: "/admin/dashboard", exact: true },
   { label: "Data Siswa", icon: "ph:student-bold", to: "/admin/students" },
+  { label: "Undangan Guru", icon: "ph:chalkboard-teacher-bold", to: "/admin/teacher-invites" },
   { label: "Nomor Bangku", icon: "ph:armchair-bold", to: "/admin/seats" },
   { label: "Scanner Absensi", icon: "ph:qr-code-bold", to: "/admin/scanner" },
   { label: "Rekap Absensi", icon: "ph:chart-bar-bold", to: "/admin/attendance" },

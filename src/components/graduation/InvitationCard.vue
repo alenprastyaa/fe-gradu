@@ -65,9 +65,9 @@
         <section v-if="type === 'recipient'" v-reveal="{ delay: i * 80 }" :class="isModern ? 'text-left' : 'text-center'">
           <p class="text-xs font-semibold uppercase tracking-[0.22em]" :style="{ color: muted(0.55) }">{{ t.recipient_greeting }}</p>
           <h2 class="mt-4 text-3xl font-bold leading-tight sm:text-[2.4rem]" :style="{ color: t.theme_text }">{{ student.name }}</h2>
-          <div class="mt-3 flex" :class="isModern ? 'justify-start' : 'justify-center'">
+          <div v-if="recipientMeta" class="mt-3 flex" :class="isModern ? 'justify-start' : 'justify-center'">
             <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold" :style="{ backgroundColor: rgba(t.theme_accent, 0.16), color: t.theme_text }">
-              <Icon icon="ph:student-bold" /> {{ student.class_name }} · {{ student.major }}
+              <Icon :icon="isTeacherInvite ? 'ph:chalkboard-teacher-bold' : 'ph:student-bold'" /> {{ recipientMeta }}
             </span>
           </div>
           <p class="mt-6 max-w-2xl text-base leading-8" :class="isModern ? '' : 'mx-auto'" :style="{ color: muted(0.78) }">{{ t.opening_text }}</p>
@@ -181,7 +181,7 @@
         </section>
 
         <!-- Nomor Bangku -->
-        <section v-else-if="type === 'seat'" v-reveal="{ delay: i * 80 }" class="space-y-4">
+        <section v-else-if="type === 'seat' && hasSeatNumbers" v-reveal="{ delay: i * 80 }" class="space-y-4">
           <div class="grid gap-4 sm:grid-cols-2">
             <div v-for="seat in seatItems" :key="seat.label" class="relative overflow-hidden rounded-2xl border p-5 text-center" :style="{ borderColor: rgba(t.theme_accent, 0.3), backgroundColor: rgba(t.theme_accent, 0.1) }">
               <p class="text-[11px] font-semibold uppercase tracking-[0.2em]" :style="{ color: muted(0.55) }">{{ seat.label }}</p>
@@ -289,6 +289,7 @@ const t = computed(() => ({
 const isModern = computed(() => t.value.layout_variant === "modern");
 const isFestive = computed(() => t.value.layout_variant === "festive");
 const hasCountdownTarget = computed(() => !!t.value.event_datetime);
+const isTeacherInvite = computed(() => props.student?.invite_type === "teacher");
 const audioEl = ref(null);
 
 function tryPlayAudio() {
@@ -353,6 +354,7 @@ const orderedSections = computed(() => {
     if (type === "countdown") return t.value.show_countdown;
     if (type === "agenda") return hasAgendaData(t.value);
     if (type === "map") return t.value.show_map;
+    if (type === "seat") return hasSeatNumbers.value;
     if (type === "qr") return t.value.show_qr;
     if (type === "note") return t.value.show_note;
     return true;
@@ -367,10 +369,18 @@ const infoItems = computed(() => [
   { icon: "ph:users-bold", label: "Dress Code Orang Tua", value: t.value.dress_code_parent },
 ]);
 
+const recipientMeta = computed(() => {
+  if (isTeacherInvite.value) {
+    return props.student?.major || props.student?.class_name || "Guru";
+  }
+  return [props.student?.class_name, props.student?.major].filter(Boolean).join(" · ");
+});
+
 const seatItems = computed(() => [
   { label: "Nomor Siswa", value: props.student.student_seat_number || seatFallback.value.student || props.student.seat_number || "-" },
   { label: "Nomor Pendamping", value: props.student.companion_seat_number || seatFallback.value.companion || "-" },
 ]);
+const hasSeatNumbers = computed(() => seatItems.value.some((item) => item.value && item.value !== "-"));
 const highlightSeatNumbers = computed(() => [
   props.student.student_seat_number || seatFallback.value.student,
   props.student.companion_seat_number || seatFallback.value.companion,

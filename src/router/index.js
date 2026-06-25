@@ -17,6 +17,7 @@ import Users from "../views/Users.vue"; // Import the new Users component
 import GraduationLogin from "../views/graduation/Login.vue";
 import GraduationDashboard from "../views/graduation/Dashboard.vue";
 import GraduationStudents from "../views/graduation/Students.vue";
+import TeacherInvites from "../views/graduation/TeacherInvites.vue";
 import GraduationImportStudents from "../views/graduation/ImportStudents.vue";
 import GraduationSeatNumbers from "../views/graduation/SeatNumbers.vue";
 import GraduationScanner from "../views/graduation/Scanner.vue";
@@ -68,6 +69,12 @@ const routes = [
     name: "GraduationStudents",
     component: GraduationStudents,
     meta: { title: "Data Siswa " + appname, requiresAuth: true, role: "school_admin" },
+  },
+  {
+    path: "/admin/teacher-invites",
+    name: "TeacherInvites",
+    component: TeacherInvites,
+    meta: { title: "Undangan Guru " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/students/import",
@@ -252,20 +259,39 @@ const router = createRouter({
   linkExactActiveClass: "exact-active",
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   document.title = to.meta.title;
   const auth = useAuthStore();
+
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     next({ name: "Login", query: { redirect: to.fullPath } });
     return;
   }
+
+  if (to.meta.requiresAuth && auth.isAuthenticated) {
+    try {
+      await auth.fetchMe();
+    } catch {
+      next({ name: "Login", query: { redirect: to.fullPath } });
+      return;
+    }
+  }
+
   const role = auth.admin?.role || localStorage.getItem("role");
   if (to.meta.role && role && to.meta.role !== role) {
     next(role === "super_admin" ? "/super/schools" : "/admin/dashboard");
     return;
   }
+
   if (to.name === "Login" && auth.isAuthenticated) {
-    next(role === "super_admin" ? "/super/schools" : "/admin/dashboard");
+    try {
+      await auth.fetchMe();
+    } catch {
+      next();
+      return;
+    }
+    const authenticatedRole = auth.admin?.role || localStorage.getItem("role");
+    next(authenticatedRole === "super_admin" ? "/super/schools" : "/admin/dashboard");
     return;
   }
   next();

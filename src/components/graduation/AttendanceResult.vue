@@ -84,6 +84,6 @@ const details = computed(() => {
     { label: "Nomor Siswa", value: s.student_seat_number || "—" },
     { label: "Nomor Pendamping", value: s.companion_seat_number || "—" },
     { label: "Waktu", value: s.attendance_time ? new Date(s.attendance_time).toLocaleString("id-ID") : "—" },
-  ];
+  ].filter((row) => !(row.label.startsWith("Nomor") && (!row.value || row.value === "—")));
 });
 </script>
