@@ -22,6 +22,7 @@ import GraduationImportStudents from "../views/graduation/ImportStudents.vue";
 import GraduationSeatNumbers from "../views/graduation/SeatNumbers.vue";
 import GraduationScanner from "../views/graduation/Scanner.vue";
 import GraduationAttendanceReport from "../views/graduation/AttendanceReport.vue";
+import GraduationTeacherAttendanceReport from "../views/graduation/TeacherAttendanceReport.vue";
 import GraduationEventSettings from "../views/graduation/EventSettings.vue";
 import GraduationResetData from "../views/graduation/ResetData.vue";
 import GraduationWhatsappBulk from "../views/graduation/WhatsappBulk.vue";
@@ -105,6 +106,12 @@ const routes = [
     name: "GraduationAttendanceReport",
     component: GraduationAttendanceReport,
     meta: { title: "Rekap Absensi " + appname, requiresAuth: true, role: "school_admin" },
+  },
+  {
+    path: "/admin/teacher-attendance",
+    name: "GraduationTeacherAttendanceReport",
+    component: GraduationTeacherAttendanceReport,
+    meta: { title: "Rekap Absensi Guru " + appname, requiresAuth: true, role: "school_admin" },
   },
   {
     path: "/admin/event-settings",

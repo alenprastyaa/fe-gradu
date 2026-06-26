@@ -10,6 +10,9 @@ export const teacherInviteService = {
   update(id, payload) {
     return api.put(`/teacher-invites/${id}`, payload);
   },
+  updateAttendanceStatus(id, payload) {
+    return api.put(`/teacher-invites/${id}/attendance`, payload);
+  },
   remove(id) {
     return api.delete(`/teacher-invites/${id}`);
   },

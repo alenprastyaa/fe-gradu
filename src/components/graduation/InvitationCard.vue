@@ -361,13 +361,26 @@ const orderedSections = computed(() => {
   });
 });
 
-const infoItems = computed(() => [
-  { icon: "ph:calendar-blank-bold", label: "Hari / Tanggal", value: t.value.event_date },
-  { icon: "ph:clock-bold", label: "Waktu", value: t.value.event_time },
-  { icon: "ph:buildings-bold", label: "Gedung / Venue", value: t.value.venue_name },
-  { icon: "ph:t-shirt-bold", label: "Dress Code Siswa", value: t.value.dress_code_student },
-  { icon: "ph:users-bold", label: "Dress Code Orang Tua", value: t.value.dress_code_parent },
-]);
+const infoItems = computed(() => {
+  const baseItems = [
+    { icon: "ph:calendar-blank-bold", label: "Hari / Tanggal", value: t.value.event_date },
+    { icon: "ph:clock-bold", label: "Waktu", value: t.value.event_time },
+    { icon: "ph:buildings-bold", label: "Gedung / Venue", value: t.value.venue_name },
+  ];
+
+  if (isTeacherInvite.value) {
+    return [
+      ...baseItems,
+      { icon: "ph:t-shirt-bold", label: "Dres Code", value: "Formal Rapi" },
+    ];
+  }
+
+  return [
+    ...baseItems,
+    { icon: "ph:t-shirt-bold", label: "Dress Code Siswa", value: t.value.dress_code_student },
+    { icon: "ph:users-bold", label: "Dress Code Orang Tua", value: t.value.dress_code_parent },
+  ];
+});
 
 const recipientMeta = computed(() => {
   if (isTeacherInvite.value) {

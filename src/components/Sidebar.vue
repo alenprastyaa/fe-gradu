@@ -86,6 +86,7 @@ const schoolMenu = [
   { label: "Nomor Bangku", icon: "ph:armchair-bold", to: "/admin/seats" },
   { label: "Scanner Absensi", icon: "ph:qr-code-bold", to: "/admin/scanner" },
   { label: "Rekap Absensi", icon: "ph:chart-bar-bold", to: "/admin/attendance" },
+  { label: "Rekap Absensi Guru", icon: "ph:chalkboard-teacher-bold", to: "/admin/teacher-attendance" },
   { label: "Template Undangan", icon: "ph:envelope-simple-bold", to: "/admin/event-settings" },
   { label: "Reset Data", icon: "ph:trash-bold", to: "/admin/reset-data" },
 ];
